@@ -105,4 +105,28 @@ public class TeamService {
             throw new SecurityException("팀 리더만 수행할 수 있습니다.");
         }
     }
+
+    public List<TeamInviteSummaryDto> getMyInvites(Long currentUserId, String statusOpt) {
+        User me = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        InviteStatus status;
+        if (statusOpt == null || statusOpt.isBlank()) {
+            status = InviteStatus.PENDING;
+        } else {
+            // "pending"/"accepted"... (소문자 허용)
+            status = InviteStatus.fromWire(statusOpt);
+        }
+
+        List<TeamInvite> invites = inviteRepository.findAllByEmailIgnoreCaseAndStatus(me.getEmail(), status);
+        return invites.stream().map(inv ->
+                new TeamInviteSummaryDto(
+                        inv.getId(),
+                        inv.getTeam().getId(),
+                        inv.getTeam().getName(),
+                        inv.getStatus().toWire(),
+                        inv.getCreatedAt()
+                )
+        ).toList();
+    }
 }
