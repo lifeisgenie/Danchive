@@ -2,76 +2,107 @@ package DumbAndDumber.Danchive.api.service;
 
 import DumbAndDumber.Danchive.api.dto.team.*;
 import DumbAndDumber.Danchive.api.entity.*;
-import DumbAndDumber.Danchive.api.store.TeamStore;
+import DumbAndDumber.Danchive.api.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 public class TeamService {
-    private final TeamStore store;
 
-    public TeamService(TeamStore store) { this.store = store; }
+    private final TeamRepository teamRepository;
+    private final TeamMembershipRepository membershipRepository;
+    private final TeamInviteRepository inviteRepository;
+    private final UserRepository userRepository;
 
-    @Transactional
-    public TeamCreatedResponse createTeam(Long userId, String teamName) {
-        if (store.alreadyInAnyTeam(userId)) throw new IllegalStateException("이미 다른 팀에 소속되어 있습니다.");
-
-        Team team = store.saveTeam(new Team(teamName));
-        // 리더 단일성 서비스 레벨 체크
-        if (store.hasLeader(team)) throw new IllegalStateException("이미 팀장이 존재합니다.");
-        store.saveMember(new TeamMember(team, userId, TeamRole.LEADER));
-
-        return new TeamCreatedResponse(team.getId(), team.getName(), "leader");
+    public TeamService(TeamRepository teamRepository,
+                       TeamMembershipRepository membershipRepository,
+                       TeamInviteRepository inviteRepository,
+                       UserRepository userRepository) {
+        this.teamRepository = teamRepository;
+        this.membershipRepository = membershipRepository;
+        this.inviteRepository = inviteRepository;
+        this.userRepository = userRepository;
     }
 
-    @Transactional
-    public InviteCreatedResponse inviteMember(Long inviterId, Long teamId, String email) {
-        Team team = store.findTeamOrThrow(teamId);
-        TeamMember me = store.findMembershipOrThrow(team, inviterId);
-        if (me.getRole() != TeamRole.LEADER) throw new SecurityException("팀장만 초대할 수 있습니다.");
-        if (store.pendingInviteExistsForEmail(email)) throw new IllegalStateException("이미 보류 중인 초대가 있습니다.");
-
-        TeamInvite invite = store.saveInvite(new TeamInvite(team, email, inviterId, store.defaultInviteExpiry()));
-        return new InviteCreatedResponse(invite.getId());
+    public TeamCreateResponse createTeam(Long currentUserId, String teamName) {
+        if (teamRepository.existsByName(teamName)) {
+            throw new IllegalArgumentException("이미 존재하는 팀 이름입니다.");
+        }
+        if (membershipRepository.existsByUser_Id(currentUserId)) {
+            throw new IllegalStateException("이미 소속된 팀이 있습니다.");
+        }
+        Team team = teamRepository.save(new Team(teamName));
+        User me = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        membershipRepository.save(new TeamMembership(team, me, TeamRole.LEADER));
+        return new TeamCreateResponse(team.getId(), teamName, TeamRole.LEADER.toWire());
     }
 
-    @Transactional
-    public AcceptInviteResponse acceptInvite(Long userId, String myEmail, Long inviteId) {
-        if (store.alreadyInAnyTeam(userId)) throw new IllegalStateException("이미 다른 팀에 소속되어 있습니다.");
-        TeamInvite invite = store.findPendingInviteOrThrow(inviteId);
-        if (invite.isExpired()) throw new IllegalStateException("초대가 만료되었습니다.");
-        if (!invite.getEmail().equalsIgnoreCase(myEmail)) throw new SecurityException("초대받은 이메일과 일치하지 않습니다.");
+    public TeamInviteSendResponse sendInvite(Long currentUserId, Long teamId, String email) {
+        ensureLeader(teamId, currentUserId);
 
-        invite.accept();
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NoSuchElementException("팀을 찾을 수 없습니다."));
+        TeamInvite invite = inviteRepository.save(new TeamInvite(team, email, currentUserId));
+        return new TeamInviteSendResponse(invite.getId());
+    }
+
+    public TeamAcceptResponse acceptInvite(Long currentUserId, Long inviteId) {
+        TeamInvite invite = inviteRepository.findByIdAndStatus(inviteId, InviteStatus.PENDING)
+                .orElseThrow(() -> new NoSuchElementException("유효하지 않은 초대입니다."));
+
+        User me = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        if (me.getEmail() == null || !me.getEmail().equalsIgnoreCase(invite.getEmail())) {
+            throw new IllegalStateException("초대받은 이메일과 현재 사용자 이메일이 일치하지 않습니다.");
+        }
+        if (membershipRepository.existsByUser_Id(currentUserId)) {
+            throw new IllegalStateException("이미 소속된 팀이 있습니다.");
+        }
+
         Team team = invite.getTeam();
-        store.saveMember(new TeamMember(team, userId, TeamRole.MEMBER));
-        return new AcceptInviteResponse(team.getId(), "member");
+        membershipRepository.save(new TeamMembership(team, me, TeamRole.MEMBER));
+        invite.accept();
+        return new TeamAcceptResponse(team.getId(), TeamRole.MEMBER.toWire());
     }
 
-    @Transactional
-    public void removeMember(Long leaderUserId, Long teamId, Long targetUserId) {
-        Team team = store.findTeamOrThrow(teamId);
-        TeamMember leader = store.findMembershipOrThrow(team, leaderUserId);
-        if (leader.getRole() != TeamRole.LEADER) throw new SecurityException("팀장만 팀원을 제거할 수 있습니다.");
-
-        TeamMember target = store.findMembershipOrThrow(team, targetUserId);
-        if (target.getRole() == TeamRole.LEADER) throw new IllegalStateException("팀장은 제거할 수 없습니다.");
-        store.removeMember(target);
+    public void removeMember(Long currentUserId, Long teamId, Long targetUserId) {
+        ensureLeader(teamId, currentUserId);
+        TeamMembership target = membershipRepository.findByTeam_IdAndUser_Id(teamId, targetUserId)
+                .orElseThrow(() -> new NoSuchElementException("해당 팀원을 찾을 수 없습니다."));
+        if (target.getRole() == TeamRole.LEADER) {
+            throw new IllegalStateException("팀장은 제거할 수 없습니다.");
+        }
+        membershipRepository.delete(target);
     }
 
-    @Transactional(readOnly = true)
-    public TeamMeResponse getMyTeam(Long userId, java.util.function.LongFunction<String> userNameResolver) {
-        TeamMember myMembership = store.findMembershipOrThrowForUser(userId);
-        Team team = myMembership.getTeam();
+    public TeamMeResponse getMyTeam(Long currentUserId) {
+        TeamMembership my = membershipRepository.findByUser_Id(currentUserId)
+                .orElseThrow(() -> new NoSuchElementException("소속된 팀이 없습니다."));
+        Long teamId = my.getTeam().getId();
+        Team team = my.getTeam();
+        List<TeamMembership> members = membershipRepository.findAllByTeam_Id(teamId);
 
-        var members = store.findMembers(team).stream().map(m -> {
-            String name = (userNameResolver != null) ? userNameResolver.apply(m.getUserId()) : ("사용자" + m.getUserId());
-            String role = (m.getRole() == TeamRole.LEADER) ? "leader" : "member";
-            return new TeamMeResponse.Member(m.getUserId(), name, role);
-        }).collect(Collectors.toList());
+        List<TeamMemberDto> memberDtos = members.stream().map(m ->
+                new TeamMemberDto(
+                        m.getUser().getId(),
+                        m.getUser().getName(),
+                        m.getRole().toWire() // "leader" / "member"
+                )
+        ).toList();
 
-        return new TeamMeResponse(team.getId(), team.getName(), members);
+        return new TeamMeResponse(team.getId(), team.getName(), memberDtos);
+    }
+
+    private void ensureLeader(Long teamId, Long userId) {
+        TeamMembership membership = membershipRepository.findByTeam_IdAndUser_Id(teamId, userId)
+                .orElseThrow(() -> new IllegalStateException("팀에 소속되지 않았습니다."));
+        if (membership.getRole() != TeamRole.LEADER) {
+            throw new SecurityException("팀 리더만 수행할 수 있습니다.");
+        }
     }
 }

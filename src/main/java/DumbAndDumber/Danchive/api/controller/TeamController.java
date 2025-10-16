@@ -1,62 +1,61 @@
 package DumbAndDumber.Danchive.api.controller;
 
+import DumbAndDumber.Danchive.api.dto.ApiResponse;
 import DumbAndDumber.Danchive.api.dto.team.*;
 import DumbAndDumber.Danchive.api.service.TeamService;
 import DumbAndDumber.Danchive.api.util.SecurityUtil;
-import DumbAndDumber.Danchive.api.dto.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/teams")
 public class TeamController {
+
     private final TeamService teamService;
     public TeamController(TeamService teamService) { this.teamService = teamService; }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<TeamCreatedResponse>> createTeam(@RequestBody @Valid CreateTeamRequest req) {
-        Long me = SecurityUtil.currentUserId();
-        var data = teamService.createTeam(me, req.teamName());
-        return ResponseEntity.status(201).body(ApiResponse.success("팀이 생성되었습니다.", data));
+    public ResponseEntity<ApiResponse<TeamCreateResponse>> createTeam(
+            @Valid @RequestBody TeamCreateRequest req) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        var data = teamService.createTeam(userId, req.getTeamName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "팀이 생성되었습니다.", data));
     }
 
     @PostMapping("/{teamId}/invites")
-    public ResponseEntity<ApiResponse<InviteCreatedResponse>> invite(@PathVariable Long teamId,
-                                                                     @RequestBody @Valid InviteRequest req) {
-        Long me = SecurityUtil.currentUserId();
-        var data = teamService.inviteMember(me, teamId, req.email());
-        return ResponseEntity.status(201).body(ApiResponse.success("초대가 전송되었습니다.", data));
+    public ResponseEntity<ApiResponse<TeamInviteSendResponse>> sendInvite(
+            @PathVariable Long teamId,
+            @Valid @RequestBody TeamInviteRequest req) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        var data = teamService.sendInvite(userId, teamId, req.getEmail());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "초대가 전송되었습니다.", data));
     }
 
     @PostMapping("/invites/{inviteId}/accept")
-    public ResponseEntity<ApiResponse<AcceptInviteResponse>> accept(@PathVariable Long inviteId) {
-        Long me = SecurityUtil.currentUserId();
-        String myEmail = getCurrentUserEmail(); // 실제 프로젝트에서 Principal에서 획득
-        var data = teamService.acceptInvite(me, myEmail, inviteId);
-        return ResponseEntity.ok(ApiResponse.success("팀에 합류했습니다.", data));
+    public ResponseEntity<ApiResponse<TeamAcceptResponse>> acceptInvite(
+            @PathVariable Long inviteId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        var data = teamService.acceptInvite(userId, inviteId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "팀에 합류했습니다.", data));
     }
 
     @DeleteMapping("/{teamId}/members/{userId}")
-    public ResponseEntity<ApiResponse<Void>> kick(@PathVariable Long teamId, @PathVariable Long userId) {
-        Long me = SecurityUtil.currentUserId();
-        teamService.removeMember(me, teamId, userId);
-        return ResponseEntity.ok(ApiResponse.success("팀원이 제거되었습니다.", null));
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+            @PathVariable Long teamId,
+            @PathVariable("userId") Long targetUserId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        teamService.removeMember(userId, teamId, targetUserId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "팀원이 제거되었습니다.", null));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<TeamMeResponse>> myTeam() {
-        Long me = SecurityUtil.currentUserId();
-        var data = teamService.getMyTeam(me, this::resolveUserName);
-        return ResponseEntity.ok(ApiResponse.success("내 팀 정보 조회 성공", data));
-    }
-
-    private String resolveUserName(long userId) {
-        // TODO: UserRepository 통해 조회 (예: userRepo.findById(userId).map(User::getName).orElse("알수없음"))
-        return "사용자" + userId;
-    }
-    private String getCurrentUserEmail() {
-        // TODO: ((CustomUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail()
-        return "member@dku.ac.kr";
+    public ResponseEntity<ApiResponse<TeamMeResponse>> getMyTeam() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        var data = teamService.getMyTeam(userId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "내 팀 정보 조회 성공", data));
     }
 }

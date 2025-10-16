@@ -5,14 +5,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public final class SecurityUtil {
     private SecurityUtil() {}
-    public static Long currentUserId() {
+
+    public static Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // 프로젝트에 맞게 Principal에서 userId를 꺼내도록 수정
-        // 예: CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
-        // return principal.getUserId();
-        if (auth == null || auth.getPrincipal() == null) throw new IllegalStateException("인증 정보가 없습니다.");
-        // 데모: principal이 Long이라고 가정
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new IllegalStateException("인증 정보가 없습니다.");
+        }
+        // 예: principal에 userId(Long)이 들어있다고 가정 (프로젝트 상황에 맞게 변환)
         if (auth.getPrincipal() instanceof Long id) return id;
-        throw new IllegalStateException("사용자 식별자를 가져올 수 없습니다.");
+        if (auth.getPrincipal() instanceof String s) return Long.valueOf(s);
+        // 필요한 경우 UserDetails 캐스팅 등 프로젝트 구조에 맞춰 수정
+        throw new IllegalStateException("지원하지 않는 principal 타입: " + auth.getPrincipal().getClass());
     }
 }
