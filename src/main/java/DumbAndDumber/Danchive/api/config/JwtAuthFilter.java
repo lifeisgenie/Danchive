@@ -9,57 +9,62 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserRepository userRepository) {
-        this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
-    }
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
-
+        String header = req.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+            String accessToken = header.substring(7);
 
             try {
-                Jws<Claims> claims = jwtUtil.parse(token);
-                String email = claims.getBody().getSubject();
+                Jws<Claims> jws = jwtUtil.parse(accessToken);
+                String email = jws.getBody().getSubject();
+                Instant exp   = jws.getBody().getExpiration().toInstant();
 
-                Optional<User> optionalUser = userRepository.findByEmail(email);
-                if (optionalUser.isPresent()) {
-                    User user = optionalUser.get();
+                Optional<User> ou = userRepository.findByEmail(email);
+                if (ou.isPresent()) {
+                    User user = ou.get();
 
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(user, null, null);
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // 화이트리스트: DB에 저장된 AT와 정확히 일치하고, 만료 전이어야만 인증
+                    if (accessToken.equals(user.getAccessToken())
+                            && user.getAccessTokenExp() != null
+                            && Instant.now().isBefore(user.getAccessTokenExp())
+                            && Instant.now().isBefore(exp)) {
 
-                    // Spring Security Context에 저장 (로그인 성공)
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        user, null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()))
+                                );
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
-
-            } catch (Exception e) {
-                // 토큰이 유효하지 않으면 무시하고 다음 필터로
-                System.out.println("JWT 인증 실패: " + e.getMessage());
+            } catch (Exception ignored) {
+                // 유효하지 않은 토큰이면 인증 없이 다음 필터로 (컨트롤러에서 401 처리)
             }
         }
-
-        filterChain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 }

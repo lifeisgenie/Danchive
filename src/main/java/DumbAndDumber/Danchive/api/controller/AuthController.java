@@ -1,70 +1,48 @@
 package DumbAndDumber.Danchive.api.controller;
 
+import DumbAndDumber.Danchive.api.dto.AuthResponse;
 import DumbAndDumber.Danchive.api.dto.LoginRequest;
-import DumbAndDumber.Danchive.api.dto.LoginResponse;
 import DumbAndDumber.Danchive.api.dto.RegisterRequest;
+import DumbAndDumber.Danchive.api.dto.UserDto;
 import DumbAndDumber.Danchive.api.service.AuthService;
 import DumbAndDumber.Danchive.domain.User;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
-
-    // 회원가입
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User newUser = authService.register(request);
-            return ResponseEntity.status(201).body(newUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<UserDto> register(@RequestBody RegisterRequest req) {
+        return ResponseEntity.status(201).body(authService.register(req));
     }
 
-    // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            LoginResponse response = authService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req, HttpServletResponse res) {
+        return ResponseEntity.ok(authService.login(req, res));
     }
 
-    // Access Token 재발급
+    /** RT는 HttpOnly 쿠키(RT)로만 받음 */
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestHeader("Authorization") String authHeader) {
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.badRequest().body("Refresh token이 필요합니다.");
-            }
-
-            String refreshToken = authHeader.substring(7);
-            LoginResponse response = authService.refresh(refreshToken);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest req, HttpServletResponse res) {
+        return ResponseEntity.ok(authService.refresh(req, res));
     }
 
-    // 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body("Access token이 필요합니다.");
-        }
-
-        // 실제 로그아웃 로직은 나중에 JWT 블랙리스트(DB) 추가 시 구현
-        return ResponseEntity.ok("로그아웃 완료 (임시 응답)");
+    public ResponseEntity<Void> logout(
+            HttpServletRequest req,
+            HttpServletResponse res,
+            @RequestHeader(value="Authorization", required=false) String bearer
+    ) {
+        authService.logout(req, res, bearer);
+        return ResponseEntity.ok().build();
     }
 }
