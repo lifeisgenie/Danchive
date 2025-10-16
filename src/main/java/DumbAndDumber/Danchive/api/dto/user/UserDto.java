@@ -1,6 +1,6 @@
-package DumbAndDumber.Danchive.api.dto;
+package DumbAndDumber.Danchive.api.dto.user;
 
-import DumbAndDumber.Danchive.domain.User;
+import DumbAndDumber.Danchive.api.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

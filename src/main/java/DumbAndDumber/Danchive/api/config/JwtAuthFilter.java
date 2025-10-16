@@ -1,7 +1,7 @@
 package DumbAndDumber.Danchive.api.config;
 
 import DumbAndDumber.Danchive.api.util.JwtUtil;
-import DumbAndDumber.Danchive.domain.User;
+import DumbAndDumber.Danchive.api.entity.User;
 import DumbAndDumber.Danchive.api.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

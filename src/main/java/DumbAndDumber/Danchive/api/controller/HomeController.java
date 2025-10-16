@@ -17,6 +17,6 @@ public class HomeController {
     @GetMapping("/home")
     public ResponseEntity<ApiResponse<HomeResponse>> getHome() {
         HomeResponse payload = homeService.fetchHomeData();
-        return ResponseEntity.ok(ApiResponse.ok("홈 데이터 조회 성공", payload));
+        return ResponseEntity.ok(ApiResponse.success("홈 데이터 조회 성공", payload));
     }
 }

@@ -1,4 +1,4 @@
-package DumbAndDumber.Danchive.api.dto;
+package DumbAndDumber.Danchive.api.dto.auth;
 
 import lombok.Getter;
 import lombok.Setter;
