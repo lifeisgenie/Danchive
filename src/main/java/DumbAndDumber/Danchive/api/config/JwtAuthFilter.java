@@ -39,26 +39,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             try {
                 Jws<Claims> jws = jwtUtil.parse(accessToken);
-                String email = jws.getBody().getSubject();
+                String subject = jws.getBody().getSubject();
                 Instant exp   = jws.getBody().getExpiration().toInstant();
 
-                Optional<User> ou = userRepository.findByEmail(email);
-                if (ou.isPresent()) {
-                    User user = ou.get();
-
-                    // 화이트리스트: DB에 저장된 AT와 정확히 일치하고, 만료 전이어야만 인증
-                    if (accessToken.equals(user.getAccessToken())
-                            && user.getAccessTokenExp() != null
-                            && Instant.now().isBefore(user.getAccessTokenExp())
-                            && Instant.now().isBefore(exp)) {
-
-                        UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(
-                                        user, null,
-                                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()))
-                                );
+                // 게스트 토큰: subject가 guest: 로 시작하면 DB조회 없이 인증 부여
+                if (subject != null && subject.startsWith("guest:")) {
+                    if (Instant.now().isBefore(exp)) {
+                        var auth = new UsernamePasswordAuthenticationToken(
+                                subject, null, List.of(new SimpleGrantedAuthority("ROLE_GUEST")));
                         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                         SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                } else {
+                    // 기존: 이메일 기반 User 조회 + 화이트리스트 매칭
+                    Optional<User> ou = userRepository.findByEmail(subject);
+                    if (ou.isPresent()) {
+                        User user = ou.get();
+                        if (accessToken.equals(user.getAccessToken())
+                                && user.getAccessTokenExp() != null
+                                && Instant.now().isBefore(user.getAccessTokenExp())
+                                && Instant.now().isBefore(exp)) {
+                            var auth = new UsernamePasswordAuthenticationToken(
+                                    user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase())));
+                            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        }
                     }
                 }
             } catch (Exception ignored) {

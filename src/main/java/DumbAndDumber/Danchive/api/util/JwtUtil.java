@@ -64,4 +64,31 @@ public class JwtUtil {
     public Instant getExpiration(String token) {
         return parse(token).getBody().getExpiration().toInstant();
     }
+
+    public String generatePasswordResetToken(String email, long expMinutes) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("typ", "reset") // 토큰 타입 식별
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(expMinutes, ChronoUnit.MINUTES)))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean isResetToken(String token) {
+        return "reset".equals(parse(token).getBody().get("typ", String.class));
+    }
+
+    /** 게스트 토큰: subject = guest:<uuid> */
+    public String generateGuestAccessToken(String guestId, long expMinutes) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .setSubject("guest:" + guestId)
+                .claim("role", "guest")
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(expMinutes, ChronoUnit.MINUTES)))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
 }
