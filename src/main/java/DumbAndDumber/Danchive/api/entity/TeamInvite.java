@@ -16,7 +16,7 @@ public class TeamInvite {
     @Column(nullable=false, length=255)
     private String email;
 
-    @Column(nullable=false)
+    @Column(name = "invited_by_user_id", nullable = false)
     private Long invitedByUserId;
 
     @Enumerated(EnumType.STRING)

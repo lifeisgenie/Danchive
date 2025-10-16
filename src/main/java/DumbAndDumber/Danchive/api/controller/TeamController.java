@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/teams")
 public class TeamController {
@@ -57,5 +59,15 @@ public class TeamController {
         Long userId = SecurityUtil.getCurrentUserId();
         var data = teamService.getMyTeam(userId);
         return ResponseEntity.ok(new ApiResponse<>(true, "내 팀 정보 조회 성공", data));
+    }
+
+    // 대기중 초대 목록
+    @GetMapping("/invites/me")
+    public ResponseEntity<ApiResponse<List<TeamInviteSummaryDto>>> getMyInvites(
+            @RequestParam(name = "status", required = false) String status) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<TeamInviteSummaryDto> data = teamService.getMyInvites(userId, status);
+        return ResponseEntity.ok(new ApiResponse<>(true, "내 초대 목록 조회 성공", data));
     }
 }
