@@ -1,8 +1,8 @@
 package DumbAndDumber.Danchive.api.repository;
 
-import DumbAndDumber.Danchive.domain.User;
+import DumbAndDumber.Danchive.api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {

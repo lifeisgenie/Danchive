@@ -1,4 +1,4 @@
-package DumbAndDumber.Danchive.domain;
+package DumbAndDumber.Danchive.api.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

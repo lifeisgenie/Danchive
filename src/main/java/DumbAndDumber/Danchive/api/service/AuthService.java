@@ -1,11 +1,12 @@
 package DumbAndDumber.Danchive.api.service;
 
-import DumbAndDumber.Danchive.api.dto.*;
+import DumbAndDumber.Danchive.api.dto.auth.*;
+import DumbAndDumber.Danchive.api.dto.user.UserDto;
 import DumbAndDumber.Danchive.api.repository.UserRepository;
 import DumbAndDumber.Danchive.api.util.CookieUtil;
 import DumbAndDumber.Danchive.api.util.JwtUtil;
 import DumbAndDumber.Danchive.api.util.PasswordPolicy;
-import DumbAndDumber.Danchive.domain.User;
+import DumbAndDumber.Danchive.api.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -51,7 +51,7 @@ public class AuthService {
         return UserDto.of(user);
     }
 
-    public AuthResponse login(LoginRequest req, HttpServletResponse res) {
+    public LoginResponse login(LoginRequest req, HttpServletResponse res) {
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("이메일을 찾을 수 없습니다."));
 
@@ -74,10 +74,10 @@ public class AuthService {
         // RT는 HttpOnly 쿠키
         CookieUtil.addHttpOnlyCookie(res, CookieUtil.RT_COOKIE, refreshToken, RT_MAX_AGE_SEC, COOKIE_DOMAIN);
 
-        return new AuthResponse(accessToken, UserDto.of(user));
+        return new LoginResponse(accessToken, UserDto.of(user));
     }
 
-    public AuthResponse refresh(HttpServletRequest req, HttpServletResponse res) {
+    public LoginResponse refresh(HttpServletRequest req, HttpServletResponse res) {
         String rt = CookieUtil.getCookie(req, CookieUtil.RT_COOKIE)
                 .orElseThrow(() -> new IllegalArgumentException("Refresh token이 필요합니다."));
 
@@ -98,7 +98,7 @@ public class AuthService {
         // String newRT = jwt.generateRefreshToken(user.getEmail());
         // CookieUtil.addHttpOnlyCookie(res, CookieUtil.RT_COOKIE, newRT, RT_MAX_AGE_SEC, COOKIE_DOMAIN);
 
-        return new AuthResponse(newAT, UserDto.of(user));
+        return new LoginResponse(newAT, UserDto.of(user));
     }
 
     public void logout(HttpServletRequest req, HttpServletResponse res, String bearerAT) {
@@ -113,7 +113,7 @@ public class AuthService {
         CookieUtil.clearCookie(res, CookieUtil.RT_COOKIE, COOKIE_DOMAIN);
     }
 
-    public AuthResponse guestLogin(GuestLoginRequest req) {
+    public LoginResponse guestLogin(GuestLoginRequest req) {
         // QR payload 검증 로직은 이후 합의(지금은 존재/형식만 체크)
         if (req == null || req.getQr() == null || req.getQr().isBlank())
             throw new IllegalArgumentException("유효하지 않은 QR입니다.");
@@ -123,7 +123,7 @@ public class AuthService {
         String at = jwt.generateGuestAccessToken(guestId, 6 * 60);
         // 게스트는 DB 사용자 행이 없으므로 userDto는 최소 정보
         UserDto user = new UserDto(null, "guest@danchive", "Guest", "guest", "N/A");
-        return new AuthResponse(at, user);
+        return new LoginResponse(at, user);
     }
 
     public Map<String, String> requestPasswordReset(PasswordResetRequestDto dto) {
