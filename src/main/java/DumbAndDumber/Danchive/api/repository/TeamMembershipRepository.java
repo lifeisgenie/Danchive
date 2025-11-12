@@ -1,5 +1,6 @@
 package DumbAndDumber.Danchive.api.repository;
 
+import DumbAndDumber.Danchive.api.entity.Team;
 import DumbAndDumber.Danchive.api.entity.TeamMembership;
 import DumbAndDumber.Danchive.api.entity.TeamRole;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,5 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     List<TeamMembership> findAllByTeam_Id(Long teamId);
     boolean existsByUser_Id(Long userId);
     boolean existsByTeam_IdAndRole(Long teamId, TeamRole role);
+    List<TeamMembership> findByTeam(Team team);
 }
