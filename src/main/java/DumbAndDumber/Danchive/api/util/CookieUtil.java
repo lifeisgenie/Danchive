@@ -10,7 +10,6 @@ import java.util.Optional;
 
 @UtilityClass
 public class CookieUtil {
-
     public static final String RT_COOKIE = "RT";
 
     public void addHttpOnlyCookie(HttpServletResponse res, String name, String value, int maxAgeSeconds, String domain) {
@@ -20,8 +19,8 @@ public class CookieUtil {
         c.setPath("/");
         c.setMaxAge(maxAgeSeconds);
         if (domain != null && !domain.isBlank()) c.setDomain(domain);
-        // SameSite 설정(서블릿 표준엔 없음) → 헤더로 직접 추가
         res.addCookie(c);
+        // SameSite 설정
         res.addHeader("Set-Cookie",
                 String.format("%s=%s; Max-Age=%d; Path=/; HttpOnly; Secure; SameSite=Lax%s",
                         name, value, maxAgeSeconds, (domain!=null && !domain.isBlank() ? "; Domain="+domain : "")));

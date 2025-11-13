@@ -1,27 +1,16 @@
 package DumbAndDumber.Danchive.api.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.*;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
-@Entity
-@Table(name = "teams")
+@Entity @Table(name="teams")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Team {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable=false, unique=true, length=100)
     private String name;
 
-    @Column(nullable=false, updatable=false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    protected Team() {}
-    public Team(String name) { this.name = name; }
-
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Team(String name){ this.name = name; }
 }

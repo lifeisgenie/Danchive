@@ -1,14 +1,12 @@
-package DumbAndDumber.Danchive.api.config;
+package DumbAndDumber.Danchive.api.config.security;
 
-import DumbAndDumber.Danchive.api.util.JwtUtil;
 import DumbAndDumber.Danchive.api.entity.User;
 import DumbAndDumber.Danchive.api.repository.UserRepository;
+import DumbAndDumber.Danchive.api.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,13 +34,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String header = req.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String accessToken = header.substring(7);
-
             try {
                 Jws<Claims> jws = jwtUtil.parse(accessToken);
                 String subject = jws.getBody().getSubject();
                 Instant exp   = jws.getBody().getExpiration().toInstant();
 
-                // 게스트 토큰: subject가 guest: 로 시작하면 DB조회 없이 인증 부여
                 if (subject != null && subject.startsWith("guest:")) {
                     if (Instant.now().isBefore(exp)) {
                         var auth = new UsernamePasswordAuthenticationToken(
@@ -51,7 +47,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 } else {
-                    // 기존: 이메일 기반 User 조회 + 화이트리스트 매칭
                     Optional<User> ou = userRepository.findByEmail(subject);
                     if (ou.isPresent()) {
                         User user = ou.get();
@@ -66,9 +61,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         }
                     }
                 }
-            } catch (Exception ignored) {
-                // 유효하지 않은 토큰이면 인증 없이 다음 필터로 (컨트롤러에서 401 처리)
-            }
+            } catch (Exception ignored) { /* invalid token -> pass */ }
         }
         chain.doFilter(req, res);
     }
