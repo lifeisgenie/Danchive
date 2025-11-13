@@ -1,13 +1,11 @@
 package DumbAndDumber.Danchive.api.dto.home.request;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
+import lombok.*; import jakarta.validation.constraints.NotBlank;
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class NewsUpsertRequest {
-    private String title;
-    private String link;
-    private String summary; // 옵션
-    private String publishedAt; // ISO-8601 문자열 (없으면 now)
+    @NotBlank private String title;
+    @NotBlank private String link;
+    private String summary;
+    /** ISO-8601 (선택) */
+    private String publishedAt;
 }

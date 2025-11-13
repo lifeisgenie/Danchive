@@ -1,20 +1,15 @@
 package DumbAndDumber.Danchive.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.Instant;
 
-@Entity
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Table(name = "users")
+@Entity @Table(name="users")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable=false, unique=true, length=190)
@@ -27,19 +22,17 @@ public class User {
     @Column(nullable=false, length=80)
     private String name;
 
-    @Column(nullable=false, length=32)
-    private String role;          // e.g. "team", "admin"
+    @Column(nullable=false, length=20)
+    private String role; // "team", "admin", "prof", "guest?"
 
-    @Column(nullable=false, length=32)
-    private String department;    // e.g. "SW"
+    @Column(length=50)
+    private String department;
 
-    /** 화이트리스트 방식: 현재 유효한 AccessToken(마지막 로그인/재발급) */
+    // AccessToken 화이트리스트
     @JsonIgnore
-    @Column(name="access_token", length=512)
+    @Column(length=2048)
     private String accessToken;
 
-    /** AT 만료 시각(Unix epoch seconds) */
     @JsonIgnore
-    @Column(name="access_token_exp")
     private Instant accessTokenExp;
 }

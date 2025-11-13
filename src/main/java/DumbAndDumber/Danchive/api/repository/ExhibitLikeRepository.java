@@ -1,8 +1,6 @@
 package DumbAndDumber.Danchive.api.repository;
 
-import DumbAndDumber.Danchive.api.entity.ExhibitLike;
-import DumbAndDumber.Danchive.api.entity.Exhibit;
-import DumbAndDumber.Danchive.api.entity.User;
+import DumbAndDumber.Danchive.api.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
