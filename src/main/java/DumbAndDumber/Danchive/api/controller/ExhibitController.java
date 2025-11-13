@@ -11,8 +11,6 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 @RestController @RequiredArgsConstructor @RequestMapping("/api/v1")
@@ -26,18 +24,10 @@ public class ExhibitController {
     }
 
     @GetMapping("/exhibits/terms")
-    public ApiResponse<TermsResponse> terms() {
+    public ApiResponse<Map<String, Object>> terms() {
         List<String> terms = exhibitService.getTerms(); // DESC
-        String current = terms.isEmpty() ? computeCurrentTerm() : terms.get(0);
-        return ApiResponse.success("학기 목록 조회 성공", new TermsResponse(current, terms));
-    }
-
-    private String computeCurrentTerm() {
-        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        int y = today.getYear(), m = today.getMonthValue();
-        int s = (m >= 3 && m <= 8) ? 1 : 2;
-        if (s == 2 && m <= 2) y -= 1; // 1~2월은 전년도-2학기로 본다
-        return y + "-" + s;
+        String current = terms.isEmpty() ? null : terms.get(0);
+        return ApiResponse.success("학기 목록 조회 성공", Map.of("currentTerm", current, "terms", terms));
     }
 
     @GetMapping("/exhibits")

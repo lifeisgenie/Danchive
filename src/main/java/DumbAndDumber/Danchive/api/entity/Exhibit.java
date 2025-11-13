@@ -24,7 +24,6 @@ public class Exhibit {
     @Column(nullable=false, length=200)
     private String shortIntro;
 
-    @Builder.Default
     @ElementCollection(fetch=FetchType.EAGER)
     @CollectionTable(name="exhibit_categories", joinColumns=@JoinColumn(name="exhibit_id"))
     @Enumerated(EnumType.STRING)
@@ -43,7 +42,6 @@ public class Exhibit {
 
     private long views;
 
-    @Builder.Default
     @ElementCollection(fetch=FetchType.EAGER)
     @CollectionTable(name="exhibit_awards", joinColumns=@JoinColumn(name="exhibit_id"))
     @Enumerated(EnumType.STRING)
