@@ -272,13 +272,20 @@ public class ExhibitService {
         return teamMembershipRepository.findByTeam_IdAndUser_Id(teamId, me.getId()).isPresent();
     }
 
-    private String upload(String basePath, MultipartFile file){ return fileStorageService.upload(basePath, file); }
+    private String upload(String basePath, MultipartFile file) {
+        return fileStorageService.upload(basePath, file);
+    }
 
     private String generateThumbAndUpload(MultipartFile poster, String basePath){
         try {
             byte[] thumb = imageThumbService.toThumbnail(poster.getBytes(), 640, 360, true);
-            return fileStorageService.upload(basePath, new InMemoryMultipart("thumb.jpg","image/jpeg",thumb));
-        } catch (Exception ex) { throw new RuntimeException("thumbnail generation failed", ex); }
+            return fileStorageService.upload(
+                    basePath,
+                    new InMemoryMultipart("thumb.jpg", "image/jpeg", thumb)
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException("thumbnail generation failed", ex);
+        }
     }
 
     private void validateTerm(String term) {
