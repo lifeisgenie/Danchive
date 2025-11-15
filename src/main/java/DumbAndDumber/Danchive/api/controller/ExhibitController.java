@@ -11,6 +11,8 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @RestController @RequiredArgsConstructor @RequestMapping("/api/v1")
@@ -24,10 +26,17 @@ public class ExhibitController {
     }
 
     @GetMapping("/exhibits/terms")
-    public ApiResponse<Map<String, Object>> terms() {
+    public ApiResponse<TermsResponse> terms() {
         List<String> terms = exhibitService.getTerms(); // DESC
-        String current = terms.isEmpty() ? null : terms.get(0);
-        return ApiResponse.success("학기 목록 조회 성공", Map.of("currentTerm", current, "terms", terms));
+        String current = terms.isEmpty() ? computeCurrentTerm() : terms.get(0);
+        return ApiResponse.success("학기 목록 조회 성공", new TermsResponse(current, terms));
+    }
+    private String computeCurrentTerm() {
+        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int y = today.getYear(), m = today.getMonthValue();
+        int s = (m >= 3 && m <= 8) ? 1 : 2;
+        if (s == 2 && m <= 2) y -= 1;
+        return y + "-" + s;
     }
 
     @GetMapping("/exhibits")
@@ -45,7 +54,9 @@ public class ExhibitController {
         if (sp.length>1 && "asc".equalsIgnoreCase(sp[1])) s = Sort.by(sp[0]).ascending();
         Pageable pageable = PageRequest.of(page, size, s);
 
-        Page<ExhibitListItemDto> result = exhibitService.search(term, category, q, awardOnly, pageable);
+        // 공개 작품만 노출
+        Page<ExhibitListItemDto> result = exhibitService.search(term, category, q, awardOnly, pageable, true);
+
         Map<String, Object> data = new HashMap<>();
         data.put("content", result.getContent());
         data.put("page", result.getNumber());
@@ -62,7 +73,7 @@ public class ExhibitController {
     }
 
     @PostMapping(value="/exhibits", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('TEAM')") // 리더 검증은 Service에서
+    @PreAuthorize("hasRole('TEAM')") // 리더 검증은 Service
     public ResponseEntity<ApiResponse<Map<String, Object>>> create(@RequestParam Long teamId, @Valid @ModelAttribute ExhibitCreateRequest req) {
         Long id = exhibitService.create(teamId, req);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("작품이 등록되었습니다.", Map.of("exhibitId", id)));

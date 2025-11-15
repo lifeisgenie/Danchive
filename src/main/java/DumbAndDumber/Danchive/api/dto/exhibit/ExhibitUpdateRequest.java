@@ -8,13 +8,11 @@ import java.util.Set;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ExhibitUpdateRequest {
-    // 팀원/팀장은 텍스트 수정 가능
     private String title;
     private String intro;
     private String shortIntro;
     private Set<ExhibitCategory> categories;
 
-    // 파일은 팀장만 교체 가능
-    private MultipartFile poster;
-    private MultipartFile ppt;
+    private MultipartFile poster; // 리더만 반영
+    private MultipartFile ppt;    // 리더만 반영
 }
