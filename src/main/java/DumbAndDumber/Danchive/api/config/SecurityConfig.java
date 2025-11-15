@@ -33,7 +33,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(req -> {
                 CorsConfiguration c = new CorsConfiguration();
-                c.setAllowedOrigins(List.of("http://localhost:3000","https://danchive.example.com"));
+                c.setAllowedOrigins(List.of("http://localhost:3000", "http://100.112.144.121:3000","https://danchive.example.com"));
                 c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
                 c.setAllowedHeaders(List.of("*"));
                 c.setAllowCredentials(true);

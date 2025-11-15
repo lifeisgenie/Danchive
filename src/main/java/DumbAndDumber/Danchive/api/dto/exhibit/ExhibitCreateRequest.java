@@ -9,13 +9,12 @@ import java.util.Set;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ExhibitCreateRequest {
-    @NotBlank private String term;                 // "2025-2"
+    @NotBlank private String term;                 // 팀장은 현재 학기만, 관리자는 임의 학기
     @NotBlank @Size(max=150) private String title;
     @NotBlank private String intro;
     @NotBlank @Size(max=200) private String shortIntro;
     @NotEmpty private Set<ExhibitCategory> categories;
 
-    // 파일
     private MultipartFile poster; // required
     private MultipartFile ppt;    // optional
 }

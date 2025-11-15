@@ -19,8 +19,6 @@ public class ImageThumbServiceImpl implements ImageThumbService {
             }
             builder.outputFormat("jpg").toOutputStream(out);
             return out.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("썸네일 생성 실패", e);
-        }
+        } catch (Exception e) { throw new RuntimeException("썸네일 생성 실패", e); }
     }
 }

@@ -2,7 +2,9 @@ package DumbAndDumber.Danchive.api.repository;
 
 import DumbAndDumber.Danchive.api.entity.*;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ExhibitGuestLikeRepository extends JpaRepository<ExhibitGuestLike, Long> {
     long countByExhibit(Exhibit exhibit);
 
