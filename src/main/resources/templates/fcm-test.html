@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FCM Token Test</title>
+</head>
+<body>
+<h1>🔥 FCM Token Test</h1>
+
+<button id="btn">🔑 FCM 토큰 발급하기</button>
+
+<h2>토큰</h2>
+<textarea id="tokenBox" rows="6" cols="80" readonly
+          placeholder="여기에 FCM 토큰이 표시됩니다."></textarea>
+<br/>
+<button id="copyBtn" disabled>📋 토큰 복사</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB65FzpCMwn9sTgrwTr74VTQrPzp4rBipo",
+        authDomain: "danchive.firebaseapp.com",
+        projectId: "danchive",
+        storageBucket: "danchive.firebasestorage.app",
+        messagingSenderId: "333648318334",
+        appId: "1:333648318334:web:08c98e5b3c08088bfded2f",
+        measurementId: "G-7D0ZJEK193"
+    };
+
+    const VAPID_KEY = "BI11mwk3NsSC-0yCiXHj-Zlc3zimuORi5E1_G4qbGi0Go1x2L43nGbKJ87dmghH8LBjaFEVhMtWvj1dUq0ttRrg";
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    const btn = document.getElementById("btn");
+    const tokenBox = document.getElementById("tokenBox");
+    const copyBtn = document.getElementById("copyBtn");
+
+    btn.addEventListener("click", async () => {
+        console.log("알림 권한 요청...");
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            alert("알림 권한이 거부되었습니다.");
+            return;
+        }
+
+        try {
+            const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+            console.log("[FCM Token]", token);
+
+            tokenBox.value = token;
+            copyBtn.disabled = false;
+            alert("토큰이 발급되었습니다. 아래 텍스트 영역에서 복사하세요.");
+        } catch (e) {
+            console.error("토큰 오류", e);
+            alert("토큰 발급 중 오류가 발생했습니다. 콘솔을 확인하세요.");
+        }
+    });
+
+    copyBtn.addEventListener("click", async () => {
+        const token = tokenBox.value.trim();
+        if (!token) return;
+
+        try {
+            await navigator.clipboard.writeText(token);
+            alert("토큰이 클립보드에 복사되었습니다!");
+        } catch (e) {
+            // 혹시 clipboard API가 막혀있으면 수동 안내
+            alert("자동 복사에 실패했습니다. 텍스트를 드래그해서 수동으로 복사해주세요.");
+        }
+    });
+</script>
+</body>
+</html>
