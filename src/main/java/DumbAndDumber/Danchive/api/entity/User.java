@@ -35,4 +35,7 @@ public class User {
 
     @JsonIgnore
     private Instant accessTokenExp;
+
+    @Column(length = 255)
+    private String fcmToken; // 한 유저당 한 기기
 }
