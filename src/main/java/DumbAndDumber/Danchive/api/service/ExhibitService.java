@@ -69,6 +69,7 @@ public class ExhibitService {
                 .shortIntro(e.getShortIntro())
                 .categories(e.getCategories())
                 .awards(e.getAwards())
+                .published(e.isPublished())
                 .build());
     }
 
@@ -171,11 +172,13 @@ public class ExhibitService {
     public Map<String,Object> like(Long id) {
         Exhibit e = exhibitRepository.findById(id).orElseThrow(() -> new NoSuchElementException("exhibit not found"));
         if (SecurityUtil.isGuest()) {
-            String gid = Optional.ofNullable(SecurityUtil.getGuestIdOrNull()).orElseThrow(() -> new IllegalStateException("invalid guest"));
-            guestLikeRepository.saveIfAbsent(gid, e);
+            String gid = Optional.ofNullable(SecurityUtil.getGuestIdOrNull())
+                    .orElseThrow(() -> new IllegalStateException("invalid guest"));
+            guestLikeRepository.saveIfAbsent(gid, e.getId());  // ← 여기 Long으로 변경
         } else {
             User me = SecurityUtil.getCurrentUserOrThrow();
-            likeRepository.findByExhibitAndUser(e, me).ifPresent(l -> { throw new IllegalStateException("already liked"); });
+            likeRepository.findByExhibitAndUser(e, me)
+                    .ifPresent(l -> { throw new IllegalStateException("already liked"); });
             likeRepository.save(ExhibitLike.builder().exhibit(e).user(me).build());
         }
         long cnt = likeRepository.countByExhibit(e) + guestLikeRepository.countByExhibit(e);
