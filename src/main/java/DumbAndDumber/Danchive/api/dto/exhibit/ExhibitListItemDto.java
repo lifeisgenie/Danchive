@@ -16,4 +16,5 @@ public class ExhibitListItemDto {
     private String shortIntro;
     private Set<ExhibitCategory> categories;
     private Set<ExhibitAward> awards;
+    boolean published;
 }
