@@ -68,7 +68,7 @@ export default function SignUpPage({ navigation }) {
                 name,
                 role,
                 department,
-                studentId, 
+                // studentId, 
             });
 
             if (response.data.success) {
@@ -176,7 +176,7 @@ export default function SignUpPage({ navigation }) {
                                 itemStyle={styles.pickerItem}
                             >
                                 <Picker.Item label="Team Member" value="team" style={{fontSize:14}}/>
-                                <Picker.Item label="Professor" value="professor" style={{fontSize:14}}/>
+                                <Picker.Item label="Professor" value="prof" style={{fontSize:14}}/>
                             </Picker>
                         </View>
                         
