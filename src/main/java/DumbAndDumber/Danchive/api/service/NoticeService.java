@@ -1,5 +1,6 @@
 package DumbAndDumber.Danchive.api.service;
 
+import DumbAndDumber.Danchive.api.dto.home.NewsDto;
 import DumbAndDumber.Danchive.api.dto.notice.NoticeCreateRequest;
 import DumbAndDumber.Danchive.api.dto.notice.NoticeDetailResponse;
 import DumbAndDumber.Danchive.api.dto.notice.NoticeSummaryDto;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -95,5 +97,27 @@ public class NoticeService {
 
     public void deleteNotice(Long id) {
         noticeRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<NewsDto> getLatestNews(int limit) {
+        List<Notice> notices = noticeRepository.findTopNByOrderByCreatedAtDesc(limit);
+
+        return notices.stream()
+                .map(n -> NewsDto.builder()
+                        .id(n.getId())
+                        .title(n.getTitle())
+                        // 홈 뉴스 클릭 시 → 공지 상세 화면으로 가야 하니까
+                        .link("/notices/" + n.getId())
+                        // summary는 필요하면 content 앞부분 조금 짤라서 쓰고, 아니라면 null/빈 문자열
+                        .summary(null)
+                        // Notice.createdAt(LocalDateTime) → Instant 변환
+                        .publishedAt(
+                                n.getCreatedAt()
+                                        .atZone(ZoneId.of("Asia/Seoul"))
+                                        .toInstant()
+                        )
+                        .build())
+                .toList();
     }
 }

@@ -14,8 +14,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserDto>> register(@RequestBody RegisterRequest req) {
-        return ResponseEntity.status(201).body(ApiResponse.success("회원가입이 완료되었습니다.", authService.register(req)));
+    public ResponseEntity<ApiResponse<UserDto>> registerTeam(@RequestBody TeamRegisterRequest req) {
+        return ResponseEntity.status(201)
+                .body(ApiResponse.success("팀 회원가입이 완료되었습니다.", authService.registerTeam(req)));
     }
 
     @PostMapping("/login")

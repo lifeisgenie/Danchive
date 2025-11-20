@@ -58,38 +58,6 @@ public class HomeAdminController {
         return ResponseEntity.noContent().build();
     }
 
-    // ===== 뉴스 =====
-
-    @GetMapping("/news")
-    public ResponseEntity<ApiResponse<List<NewsDto>>> listNews(){
-        return ResponseEntity.ok(
-                ApiResponse.success("뉴스 목록 조회 성공", adminService.listNews())
-        );
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/news")
-    public ResponseEntity<ApiResponse<NewsDto>> createNews(@RequestBody NewsUpsertRequest req){
-        return ResponseEntity.status(201)
-                .body(ApiResponse.success("뉴스가 생성되었습니다.", adminService.createNews(req)));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/news/{id}")
-    public ResponseEntity<ApiResponse<NewsDto>> updateNews(@PathVariable Long id,
-                                                           @RequestBody NewsUpsertRequest req){
-        return ResponseEntity.ok(
-                ApiResponse.success("뉴스가 수정되었습니다.", adminService.updateNews(id, req))
-        );
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/news/{id}")
-    public ResponseEntity<Void> deleteNews(@PathVariable Long id){
-        adminService.deleteNews(id);
-        return ResponseEntity.noContent().build();
-    }
-
     // ===== 공지 (관리자 전용) =====
 
     @PreAuthorize("hasRole('ADMIN')")

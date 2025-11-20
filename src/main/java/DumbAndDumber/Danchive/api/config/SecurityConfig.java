@@ -33,7 +33,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(req -> {
                 CorsConfiguration c = new CorsConfiguration();
-                c.setAllowedOrigins(List.of("http://localhost:3000", "http://100.112.144.121:3000","https://danchive.example.com"));
+                c.setAllowedOrigins(List.of("http://localhost:3000", "http://100.108.165.83:3000","https://danchive.example.com"));
                 c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
                 c.setAllowedHeaders(List.of("*"));
                 c.setAllowCredentials(true);
@@ -47,7 +47,7 @@ public class SecurityConfig {
                         // 공개 엔드포인트
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/home").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/home", "/api/v1/notices", "/api/v1/notices/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/guest").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/exhibits/admin/**").hasRole("ADMIN")
