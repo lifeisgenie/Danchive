@@ -66,9 +66,8 @@ export default function SignUpPage({ navigation }) {
                 email,
                 password,
                 name,
-                role,
                 department,
-                // studentId, 
+                studentId, 
             });
 
             if (response.data.success) {
@@ -165,20 +164,8 @@ export default function SignUpPage({ navigation }) {
                         </View>
                         {validationErrors.password && <Text style={styles.errorText}>{validationErrors.password}</Text>}
 
-                        {/* Role 선택 */}
-                        <Text style={styles.label}>Role (Team/Professor)</Text>
-                        <View style={[styles.pickerWrapper, styles.neumorphicStyle]}>
-                            <Picker
-                                selectedValue={role}
-                                onValueChange={(itemValue) => setRole(itemValue)}
-                                enabled={!isLoading}
-                                style={styles.picker}
-                                itemStyle={styles.pickerItem}
-                            >
-                                <Picker.Item label="Team Member" value="team" style={{fontSize:14}}/>
-                                <Picker.Item label="Professor" value="prof" style={{fontSize:14}}/>
-                            </Picker>
-                        </View>
+
+                        
                         
                         {apiError ? <Text style={styles.apiErrorText}>{apiError}</Text> : null}
 

@@ -34,6 +34,9 @@ function AuthStack() {
             <Stack.Screen name="Landing" component={LandingScreen} />
             <Stack.Screen name="SignIn" component={SignInPage} />
             <Stack.Screen name="SignUp" component={SignUpPage} />
+            <Stack.Screen name="MainPage" component={Mainpage} />
+            <Stack.Screen name="MyPage" component={MyPage} />
+            <Stack.Screen name = "NoticeDetail" component={NoticeDetail} />
         </Stack.Navigator>
     );
 }

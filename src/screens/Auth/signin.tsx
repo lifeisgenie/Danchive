@@ -58,11 +58,11 @@ export default function SignInPage({ navigation }) {
             });
 
             if (response.data.success) {
-                const { access_token } = response.data.data;
+                const { access_token, user } = response.data.data;
                 
                 await AsyncStorage.setItem('userToken', access_token);
-                
-                navigation.replace('Tabs'); 
+                await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+                navigation.replace('Tabs', {screen: 'Home'}); 
 
             } else {
                 setApiError(response.data.message || "로그인에 실패했습니다.");
