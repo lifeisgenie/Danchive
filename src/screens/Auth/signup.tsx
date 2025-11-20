@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const API_BASE_URL = 'http://100.66.95.13:8080/api/v1';
+const API_BASE_URL = 'http://100.84.161.55:8080/api/v1';
 
 // 유효성 검사 함수들
 const validatePassword = (password: string) => {
@@ -66,9 +66,8 @@ export default function SignUpPage({ navigation }) {
                 email,
                 password,
                 name,
-                role,
                 department,
-                // studentId, 
+                studentId, 
             });
 
             if (response.data.success) {
@@ -165,20 +164,8 @@ export default function SignUpPage({ navigation }) {
                         </View>
                         {validationErrors.password && <Text style={styles.errorText}>{validationErrors.password}</Text>}
 
-                        {/* Role 선택 */}
-                        <Text style={styles.label}>Role (Team/Professor)</Text>
-                        <View style={[styles.pickerWrapper, styles.neumorphicStyle]}>
-                            <Picker
-                                selectedValue={role}
-                                onValueChange={(itemValue) => setRole(itemValue)}
-                                enabled={!isLoading}
-                                style={styles.picker}
-                                itemStyle={styles.pickerItem}
-                            >
-                                <Picker.Item label="Team Member" value="team" style={{fontSize:14}}/>
-                                <Picker.Item label="Professor" value="prof" style={{fontSize:14}}/>
-                            </Picker>
-                        </View>
+
+                        
                         
                         {apiError ? <Text style={styles.apiErrorText}>{apiError}</Text> : null}
 

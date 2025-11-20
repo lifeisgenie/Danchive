@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://100.66.95.13:8080/api/v1';
+const API_BASE_URL = 'http://100.84.161.55:8080/api/v1';
 
 const validatePassword = (password: string) => {
     const regex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,16}$/;
@@ -58,11 +58,11 @@ export default function SignInPage({ navigation }) {
             });
 
             if (response.data.success) {
-                const { access_token } = response.data.data;
+                const { access_token, user } = response.data.data;
                 
                 await AsyncStorage.setItem('userToken', access_token);
-                
-                navigation.replace('Tabs'); 
+                await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+                navigation.replace('Tabs', {screen: 'Home'}); 
 
             } else {
                 setApiError(response.data.message || "로그인에 실패했습니다.");

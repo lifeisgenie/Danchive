@@ -1,11 +1,14 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Dimensions  } from 'react-native';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+// useNavigation import는 안 써도 되지만 놔둬도 무방
+// import { useNavigation } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
-const cardWidth = screenWidth * 0.95; 
+const cardWidth = screenWidth * 0.95;
 const cardHeight = cardWidth * 1.2;
+const API_BASE_URL = 'http://100.84.161.55:8080/api/v1';
 
 const images = [
   require('./assets/sample-photo1.png'),
@@ -15,29 +18,59 @@ const images = [
 
 const cardInfos = [
   {
-    title: "Communication Design\nThe 35TH Graduation",
-    date: "2024.10.31 ~ 11.04",
+    title: 'Communication Design\nThe 35TH Graduation',
+    date: '2024.10.31 ~ 11.04',
   },
 ];
 
-const notices = [
-  { id: '1', title: '공지사항 1' },
-  { id: '2', title: '공지사항 2' },
-  { id: '3', title: '공지사항 3' },
-];
-
-
-const MainPage = () => {
+export default function Mainpage({ navigation }) {
   const [current, setCurrent] = useState(0);
   const flatRef = useRef(null);
+  const [notices, setNotices] = useState([]);
+  const [loadingNotices, setLoadingNotices] = useState(false);
+  const [error, setError] = useState(null);
+
+  // createdAt -> 2025-11-20 형태로 포맷
+  const formatDate = iso => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    } catch {
+      return iso;
+    }
+  };
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      setLoadingNotices(true);
+      try {
+        // 전체 허용이므로 토큰 없이 호출
+        const response = await axios.get(`${API_BASE_URL}/notices`);
+
+        if (response.data?.success && response.data?.data) {
+          setNotices(response.data.data);
+          setError(null);
+        } else {
+          setError('공지사항을 불러오는데 실패했습니다.');
+        }
+      } catch (e) {
+        console.log('공지 목록 조회 에러:', e);
+        setError('네트워크 에러가 발생했습니다.');
+      } finally {
+        setLoadingNotices(false);
+      }
+    };
+
+    fetchNotices();
+  }, []);
 
   const renderCard = ({ item, index }) => (
     <View style={styles.cardContainer}>
-      <Image 
-        source={item} 
-        style={styles.cardImage} 
-        resizeMode="stretch"
-      />
+      <Image source={item} style={styles.cardImage} resizeMode="stretch" />
       <View style={styles.cardOverlay}>
         <Text style={styles.cardOverlayTitle}>{cardInfos[index]?.title}</Text>
         <Text style={styles.cardOverlaySubtitle}>{cardInfos[index]?.date}</Text>
@@ -46,32 +79,39 @@ const MainPage = () => {
         </TouchableOpacity>
       </View>
       {index > 0 && (
-        <TouchableOpacity style={styles.arrowLeft} onPress={() => flatRef.current.scrollToIndex({ index: index - 1 })}>
+        <TouchableOpacity
+          style={styles.arrowLeft}
+          onPress={() => flatRef.current.scrollToIndex({ index: index - 1 })}
+        >
           <Text style={{ fontSize: 24 }}>◀</Text>
         </TouchableOpacity>
       )}
       {index < images.length - 1 && (
-        <TouchableOpacity style={styles.arrowRight} onPress={() => flatRef.current.scrollToIndex({ index: index + 1 })}>
+        <TouchableOpacity
+          style={styles.arrowRight}
+          onPress={() => flatRef.current.scrollToIndex({ index: index + 1 })}
+        >
           <Text style={{ fontSize: 24 }}>▶</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 
-  // 공지사항 목록 화면 전체를 FlatList로 대체, 헤더에 메인 콘텐츠
-    return (
+  return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <FlatList
-        data={[{ key: 'dummy' }]}      // 위아래 스크롤 위해 dummy 데이터 1개
+        data={[{ key: 'dummy' }]} // 위아래 스크롤 위해 dummy 데이터 1개
         keyExtractor={item => item.key}
-        renderItem={() => null}        // 실제 아이템 렌더 X
+        renderItem={() => null} // 실제 아이템 렌더 X
         ListHeaderComponent={
           <>
             <View style={styles.header}>
               <Image source={require('./assets/logo.png')} style={styles.logo} />
             </View>
             <View style={styles.titleArea}>
-              <Text style={styles.title}>2025학년도{'\n'}소프트웨어학과 졸업작품전시회 :</Text>
+              <Text style={styles.title}>
+                2025학년도{'\n'}소프트웨어학과 졸업작품전시회 :
+              </Text>
             </View>
             <View style={styles.sliderArea}>
               <FlatList
@@ -96,22 +136,38 @@ const MainPage = () => {
                   key={idx}
                   style={[
                     styles.indicatorDot,
-                    { backgroundColor: idx === current ? 'rgba(33,33,33,0.88)' : 'rgba(33,33,33,0.22)' }
+                    {
+                      backgroundColor:
+                        idx === current ? 'rgba(33,33,33,0.88)' : 'rgba(33,33,33,0.22)',
+                    },
                   ]}
                 />
               ))}
             </View>
             <View style={styles.newsArea}>
               <Text style={styles.newsTitle}>NEWS</Text>
+
+              {loadingNotices && <Text>불러오는 중...</Text>}
+              {error && <Text style={{ color: 'red', marginBottom: 6 }}>{error}</Text>}
+
               <FlatList
                 data={notices}
-                keyExtractor={item => item.id}
+                keyExtractor={item => String(item.id)}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.noticeItem}
-                    onPress={() => navigate('NoticeDetail', { noticeId: item.id })}
+                    onPress={() =>
+                      navigation.navigate('NoticeDetail', { noticeId: item.id })
+                    }
                   >
-                    <Text>{item.title}</Text>
+                    <View style={styles.noticeRow}>
+                      <Text style={styles.noticeTitle} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.noticeDate}>
+                        {formatDate(item.createdAt)}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 )}
                 style={{ maxHeight: 160 }}
@@ -124,8 +180,7 @@ const MainPage = () => {
       />
     </SafeAreaView>
   );
-
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
@@ -141,8 +196,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'lightgray',
     overflow: 'hidden',
     marginHorizontal: 8,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.15,
@@ -169,31 +224,52 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  cardOverlayTitle: { fontSize: 17, fontWeight: "bold" },
-  cardOverlaySubtitle: { fontSize: 13, fontWeight: "400", marginTop: 3 },
-  cardCopyBtn: { position: "absolute", right: 10, bottom: 10, },
-  arrowLeft: { position: "absolute", left: 4, top: "50%", marginTop: -14, zIndex: 1 },
-  arrowRight: { position: "absolute", right: 4, top: "50%", marginTop: -14, zIndex: 1 },
-  indicatorArea: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 10, },
-  indicatorDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#333", marginHorizontal: 3 },
+  cardOverlayTitle: { fontSize: 17, fontWeight: 'bold' },
+  cardOverlaySubtitle: { fontSize: 13, fontWeight: '400', marginTop: 3 },
+  cardCopyBtn: { position: 'absolute', right: 10, bottom: 10 },
+  arrowLeft: { position: 'absolute', left: 4, top: '50%', marginTop: -14, zIndex: 1 },
+  arrowRight: { position: 'absolute', right: 4, top: '50%', marginTop: -14, zIndex: 1 },
+  indicatorArea: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  indicatorDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#333', marginHorizontal: 3 },
   newsArea: {
     marginTop: 10,
     width: cardWidth,
     height: cardHeight * 0.4,
     paddingHorizontal: 20,
     paddingVertical: 20,
-    backgroundColor: "white",
-    alignSelf: "center",
+    backgroundColor: 'white',
+    alignSelf: 'center',
     borderRadius: 25,
-    alignself: "center",
+    alignself: 'center',
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 10
+    shadowRadius: 10,
   },
-  newsTitle: { fontSize: 17, fontWeight: "bold", marginBottom: 10 },
-  noticeItem: { paddingVertical: 8, borderBottomWidth: 0.5, borderColor: "#eee" },
+  newsTitle: { fontSize: 17, fontWeight: 'bold', marginBottom: 10 },
+  noticeItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderColor: '#eee',
+  },
+  noticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  noticeTitle: {
+    flex: 1,
+    fontSize: 14,
+    color: '#222',
+    marginRight: 8,
+  },
+  noticeDate: {
+    fontSize: 12,
+    color: '#888',
+  },
 });
-
-export default MainPage;
