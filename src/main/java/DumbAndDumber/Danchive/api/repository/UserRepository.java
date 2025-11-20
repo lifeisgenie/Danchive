@@ -10,4 +10,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByAccessToken(String token);
     List<User> findAllByFcmTokenIsNotNull();
+    boolean existsByEmail(String email);
 }
