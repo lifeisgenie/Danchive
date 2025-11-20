@@ -22,11 +22,15 @@ public class User {
     @Column(nullable=false, length=80)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable=false, length=20)
-    private String role; // "team", "admin", "prof", "guest?"
+    private Role role;
 
     @Column(length=50)
     private String department;
+
+    @Column(length = 20)
+    private String studentId;
 
     // AccessToken 화이트리스트
     @JsonIgnore

@@ -2,6 +2,7 @@ package DumbAndDumber.Danchive.api.service;
 
 import DumbAndDumber.Danchive.api.dto.auth.*;
 import DumbAndDumber.Danchive.api.dto.user.UserDto;
+import DumbAndDumber.Danchive.api.entity.Role;
 import DumbAndDumber.Danchive.api.entity.User;
 import DumbAndDumber.Danchive.api.repository.UserRepository;
 import DumbAndDumber.Danchive.api.util.CookieUtil;
@@ -27,7 +28,7 @@ public class AuthService {
     private static final int RT_MAX_AGE_SEC = 7 * 24 * 60 * 60;
     private static final String COOKIE_DOMAIN = "";
 
-    public UserDto register(RegisterRequest req) {
+    public UserDto registerTeam(TeamRegisterRequest req) {
         if (!PasswordPolicy.valid(req.getPassword()))
             throw new IllegalArgumentException("비밀번호 규칙 불일치(8~16자, 영문/숫자/특수문자)");
 
@@ -38,8 +39,9 @@ public class AuthService {
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
                 .name(req.getName())
-                .role(req.getRole())
+                .role(Role.TEAM)
                 .department(req.getDepartment())
+                .studentId(req.getStudentId())
                 .build();
 
         userRepository.save(user);

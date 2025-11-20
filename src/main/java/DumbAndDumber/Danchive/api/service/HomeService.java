@@ -15,16 +15,38 @@ import java.util.List;
 public class HomeService {
 
     private final HomeInMemoryStore store;
+    private final NoticeService noticeService;
 
     public HomeResponse fetchHomeData() {
+        // 배너: 인메모리 더미 or 관리 API
         List<BannerDto> banners = store.listBanners();
-        List<NewsDto> news = store.listNews();
+
+        // 뉴스: 최근 공지 3개 → NewsDto 변환
+        List<NewsDto> news = noticeService.getLatestNews(3);
+
+        // 내비: 고정값 (필요에 따라 수정)
         List<NavItemDto> nav = List.of(
-                NavItemDto.builder().key("home").title("홈").path("/").build(),
-                NavItemDto.builder().key("browse").title("조회").path("/browse").build(),
-                NavItemDto.builder().key("exhibit").title("전시회").path("/exhibits").build(),
-                NavItemDto.builder().key("mypage").title("마이페이지").path("/me").build()
+                NavItemDto.builder()
+                        .key("exhibits")
+                        .title("작품 보기")
+                        .path("/exhibits")
+                        .build(),
+                NavItemDto.builder()
+                        .key("awards")
+                        .title("수상작")
+                        .path("/exhibits?awardOnly=true")
+                        .build(),
+                NavItemDto.builder()
+                        .key("notice")
+                        .title("공지사항")
+                        .path("/notices")
+                        .build()
         );
-        return HomeResponse.builder().banners(banners).news(news).nav(nav).build();
+
+        return HomeResponse.builder()
+                .banners(banners)
+                .news(news)
+                .nav(nav)
+                .build();
     }
 }
