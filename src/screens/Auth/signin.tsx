@@ -62,7 +62,7 @@ export default function SignInPage({ navigation }) {
                 
                 await AsyncStorage.setItem('userToken', access_token);
                 
-                navigation.replace('Tabs'); 
+                navigation.replace('Tabs', {screen: 'Main'}); 
 
             } else {
                 setApiError(response.data.message || "로그인에 실패했습니다.");
