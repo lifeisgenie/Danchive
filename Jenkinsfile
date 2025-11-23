@@ -6,8 +6,6 @@ pipeline {
         GIT_CRED_ID    = 'danchive-jenkins'
         DOCKER_CRED_ID = 'dockerhub-danchive'
         IMAGE_NAME     = 'lifeisgenie/danchive-backend'
-
-        // Jenkins Credentials (Secret file) ID
         FIREBASE_CRED_ID = 'firebase-service-account'
     }
 
@@ -24,17 +22,17 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: FIREBASE_CRED_ID, variable: 'FIREBASE_JSON')]) {
                     sh '''
-                      echo "Current directory: $(pwd)"
-
-                      # Firebase 파일 복사
-                      mkdir -p firebase
-                      cp "$FIREBASE_JSON" firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
-
-                      chmod +x gradlew
-
-                      ./gradlew clean test build \
-                        -Dspring.profiles.active=test \
-                        -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+                        echo "Current directory: $(pwd)"
+                        mkdir -p firebase
+                        cp "$FIREBASE_JSON" firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+                        chmod +x gradlew
+                        ./gradlew clean test build \
+                            -Dspring.profiles.active=test \
+                            -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json \
+                            -DDB_URL=jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8 \
+                            -DDB_USER=danchive \
+                            -DDB_PASSWORD=danchive-password \
+                            --info --stacktrace
                     '''
                 }
             }
