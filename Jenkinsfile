@@ -21,13 +21,16 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'firebase-service-account', variable: 'FIREBASE_JSON')]) {
                     sh '''
+                    echo "Current directory: $(pwd)"
                     mkdir -p firebase
                     cp "$FIREBASE_JSON" firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+                    echo "Listing firebase directory:"
+                    ls -l firebase/
 
                     chmod +x gradlew || true
                     ./gradlew clean test build \
                         -Dspring.profiles.active=test \
-                        -Dfirebase.credentials.path=firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+                        -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
                     '''
                 }
             }
