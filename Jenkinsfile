@@ -8,7 +8,7 @@ pipeline {
         IMAGE_NAME     = 'lifeisgenie/danchive-backend'
 
         // Jenkins Credentials (Secret file) ID
-        FIREBASE_CRED_ID = 'firebase-admin-json'
+        FIREBASE_CRED_ID = 'firebase-service-account'
     }
 
     stages {
