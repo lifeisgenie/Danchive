@@ -50,7 +50,6 @@ pipeline {
                         echo "### Gradle clean test build 실행"
                         ./gradlew clean test build \
                           -Dspring.profiles.active=test \
-                          -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json \
                           -DDB_URL="${DB_URL}" \
                           -DDB_USER="${DB_USER}" \
                           -DDB_PASSWORD="${DB_PASSWORD}" \
@@ -107,7 +106,7 @@ pipeline {
         always {
             echo "### 워크스페이스 정리"
             sh 'rm -rf firebase || true'
-            cleanWs()
+            deleteDir()
         }
         success {
             echo "### 파이프라인 성공"
