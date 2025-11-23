@@ -19,27 +19,23 @@ pipeline {
 
         stage('Backend Build & Test') {
             steps {
-                sh '''
-                  ls -al
-                  chmod +x gradlew || true
-                  ./gradlew clean test build
-                '''
+                // 레포 루트에 gradlew, build.gradle 있으니까 그냥 여기서 실행
+                sh 'chmod +x gradlew || true'
+                sh './gradlew clean test build'
             }
         }
 
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // 태그: backend-브랜치이름-빌드번호 형태
-                    def tag = "backend-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                    // 태그: backend-빌드번호
+                    def tag = "backend-${env.BUILD_NUMBER}"
                     def fullImage = "${IMAGE_NAME}:${tag}"
 
-                    dir('backend') {
-                        sh """
-                          echo "Building image: ${fullImage}"
-                          docker build -t ${fullImage} .
-                        """
-                    }
+                    sh """
+                      echo "Building image: ${fullImage}"
+                      docker build -t ${fullImage} .
+                    """
 
                     withCredentials([usernamePassword(
                         credentialsId: DOCKER_CRED_ID,
