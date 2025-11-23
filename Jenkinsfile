@@ -32,7 +32,7 @@ pipeline {
                     ./gradlew clean test build \
                         -Dspring.profiles.active=test \
                         -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json \
-                        -DDB_URL=jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8 \
+                        "-DDB_URL=jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8" \
                         -DDB_USER=danchive \
                         -DDB_PASSWORD=danchive-password
                     '''
