@@ -19,11 +19,11 @@ pipeline {
 
         stage('Backend Build & Test') {
             steps {
-                dir('backend') {
-                    // Gradle 기준, 프로젝트에 맞게 수정
-                    sh './gradlew clean test build'
-                    // Maven이면: sh 'mvn clean test package'
-                }
+                sh '''
+                  ls -al
+                  chmod +x gradlew || true
+                  ./gradlew clean test build
+                '''
             }
         }
 
