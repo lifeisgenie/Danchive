@@ -1,14 +1,12 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Ehxhfl23#}
+    url: jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: danchive
+    password: danchive-password
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: false
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
