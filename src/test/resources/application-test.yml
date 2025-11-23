@@ -12,3 +12,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+firebase:
+  credentials:
+    path: firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
