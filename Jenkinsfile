@@ -45,12 +45,17 @@ pipeline {
                         mkdir -p firebase
                         cp "$FIREBASE_JSON" firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
 
+                        echo "### Copied firebase json:"
+                        ls -al "$(pwd)/firebase"
+
+                        export FIREBASE_CREDENTIALS_PATH="$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json"
+                        echo "FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH"
+
                         chmod +x gradlew
 
                         echo "### Gradle clean test build 실행"
                         ./gradlew clean test build \
                           -Dspring.profiles.active=test \
-                          -Dfirebase.credentials.path=$(pwd)/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json \
                           -DDB_URL="${DB_URL}" \
                           -DDB_USER="${DB_USER}" \
                           -DDB_PASSWORD="${DB_PASSWORD}" \
