@@ -19,25 +19,24 @@ pipeline {
 
         stage('Frontend Install & Build') {
             steps {
-                dir('fronted') {
-                    sh 'npm ci || npm install'
-                    sh 'npm run build'
-                }
+                // 레포 루트에 package.json 있음
+                sh 'npm ci || npm install'
+                // React Native라면 실제 빌드 대신 lint/test 정도로 두고,
+                // 웹 배포용 번들이면 npm run build 그대로 사용
+                sh 'npm run build'
             }
         }
 
         stage('Docker Build & Push') {
             steps {
                 script {
-                    def tag = "frontend-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                    def tag = "frontend-${env.BUILD_NUMBER}"
                     def fullImage = "${IMAGE_NAME}:${tag}"
 
-                    dir('fronted') {
-                        sh """
-                          echo "Building image: ${fullImage}"
-                          docker build -t ${fullImage} .
-                        """
-                    }
+                    sh """
+                      echo "Building image: ${fullImage}"
+                      docker build -t ${fullImage} .
+                    """
 
                     withCredentials([usernamePassword(
                         credentialsId: DOCKER_CRED_ID,
@@ -55,4 +54,3 @@ pipeline {
         }
     }
 }
-
