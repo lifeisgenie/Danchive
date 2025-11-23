@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'fronted',
+                git branch: 'frontend',
                     url: GIT_REPO,
                     credentialsId: GIT_CRED_ID
             }
