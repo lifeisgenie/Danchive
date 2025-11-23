@@ -65,23 +65,22 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Container Build & Push (Jib)') {
             steps {
                 script {
-                    echo "### Docker 이미지 빌드 & 푸시"
+                    echo "### Jib로 컨테이너 이미지 빌드 & 푸시 (Docker daemon 없음)"
 
                     // firebase 디렉토리 혹시 남아있으면 삭제 (이미지에 안 들어가게)
-                    sh 'rm -rf firebase'
+                    sh 'rm -rf firebase || true'
 
                     // 태그: backend-BUILD_NUMBER 형태
                     def tag = "backend-${env.BUILD_NUMBER}"
                     def fullImage = "${IMAGE_NAME}:${tag}"
 
-                    sh """
-                      echo "Building image: ${fullImage}"
-                      docker version
-                      docker build -t ${fullImage} .
-                    """
+                    // 셸에서 사용할 환경변수로 세팅
+                    env.JIB_IMAGE = fullImage
+
+                    echo "### 빌드 & 푸시 대상 이미지: ${fullImage}"
 
                     withCredentials([
                         usernamePassword(
@@ -90,19 +89,26 @@ pipeline {
                             passwordVariable: 'DOCKER_PASS'
                         )
                     ]) {
-                        sh """
-                          echo "### Docker Hub 로그인"
-                          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        sh '''
+                          echo "### Jib 빌드 시작"
 
-                          echo "### 이미지 푸시: ${fullImage}"
-                          docker push ${fullImage}
+                          chmod +x gradlew
 
-                          echo "### Docker 로그아웃"
-                          docker logout
-                        """
+                          # Jib는 Docker 데몬 없이 바로 레지스트리에 푸시한다.
+                          # auth는 system property로 전달
+                          ./gradlew jib \
+                            -Djib.to.image=${JIB_IMAGE} \
+                            -Djib.to.auth.username=${DOCKER_USER} \
+                            -Djib.to.auth.password=${DOCKER_PASS} \
+                            -Dspring.profiles.active=test \
+                            -DDB_URL="${DB_URL}" \
+                            -DDB_USER="${DB_USER}" \
+                            -DDB_PASSWORD="${DB_PASSWORD}" \
+                            --info --stacktrace
+                        '''
                     }
 
-                    echo "### 빌드 완료: ${fullImage}"
+                    echo "### Jib 빌드 & 푸시 완료: ${fullImage}"
                 }
             }
         }
