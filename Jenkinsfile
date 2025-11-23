@@ -17,7 +17,6 @@ pipeline {
 
     options {
         skipDefaultCheckout(true) // 기본 체크아웃 막고 우리가 직접 git 단계 수행
-        timestamps()              // 로그에 타임스탬프
     }
 
     stages {
