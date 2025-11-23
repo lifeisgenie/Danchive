@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         GIT_REPO       = 'https://github.com/lifeisgenie/Danchive.git'
-        GIT_CRED_ID    = 'danchive-jenkins'       // GitHub용
-        DOCKER_CRED_ID = 'dockerhub-danchive'     // Docker Hub용
+        GIT_CRED_ID    = 'danchive-jenkins'
+        DOCKER_CRED_ID = 'dockerhub-danchive'
         IMAGE_NAME     = 'lifeisgenie/danchive-backend'
     }
 
@@ -17,18 +17,23 @@ pipeline {
             }
         }
 
-        stage('Backend Build & Test') {
+        stage('Backend Test & Build') {
             steps {
-                // 레포 루트에 gradlew, build.gradle 있으니까 그냥 여기서 실행
-                sh 'chmod +x gradlew || true'
-                sh './gradlew clean test build'
+                withCredentials([file(credentialsId: 'firebase-service-account', variable: 'FIREBASE_JSON')]) {
+                    sh '''
+                      mkdir -p /firebase
+                      cp "$FIREBASE_JSON" /firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+
+                      chmod +x gradlew || true
+                      ./gradlew clean test build
+                    '''
+                }
             }
         }
 
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // 태그: backend-빌드번호
                     def tag = "backend-${env.BUILD_NUMBER}"
                     def fullImage = "${IMAGE_NAME}:${tag}"
 
