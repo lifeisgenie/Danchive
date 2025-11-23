@@ -1,19 +1,17 @@
 spring:
   datasource:
-    url: jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: danchive
-    password: danchive-password
+    # 기본값은 로컬 MySQL (VM에서 테스트할 때 사용)
+    url: ${DB_URL:jdbc:mysql://localhost:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Ehxhfl23#}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: create
-      dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: false
     properties:
       hibernate:
         format_sql: true
-
-firebase:
-  credentials:
-    path: firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+        # 혹시 모를 Dialect 인식 문제 방지용 (선택)
+        dialect: org.hibernate.dialect.MySQL8Dialect
