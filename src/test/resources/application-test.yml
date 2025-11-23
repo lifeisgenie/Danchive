@@ -26,4 +26,4 @@ app:
 
 firebase:
   credentials:
-    path: /firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
+    path: ${FIREBASE_CREDENTIALS_PATH:}
