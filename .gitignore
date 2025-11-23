@@ -36,3 +36,4 @@ out/
 ### VS Code ###
 .vscode/
 src/main/resources/firebase/*.json
+src/test/resources/firebase/danchive-firebase-adminsdk-fbsvc-0e59eb133e.json
