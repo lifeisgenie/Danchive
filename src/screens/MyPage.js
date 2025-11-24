@@ -9,6 +9,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Touchable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +19,6 @@ import axios from 'axios';
 const API_BASE_URL = 'http://100.84.161.55:8080/api/v1';
 
 const menuItems = [
-  { title: '설정' },
   { title: '비밀번호 재설정' },
   { title: '회원탈퇴' },
 ];
@@ -35,44 +35,69 @@ export default function MyPage({ navigation }) {
   const [inviteList, setInviteList] = useState([]);
   const [selectedInviteId, setSelectedInviteId] = useState(null);
   const [isAcceptingInvite, setIsAcceptingInvite] = useState(false);
-  useEffect(() => {
-    const fetchUserAndTeamInfo = async () => {
-      // 유저 정보
-      const userStr = await AsyncStorage.getItem('currentUser');
-      if (userStr) {
-        try {
-          setUserInfo(JSON.parse(userStr));
-        } catch (e) {
-          console.log('currentUser 파싱 에러:', e);
-        }
+  const fetchUserAndTeamInfo = async () => {
+    const userStr = await AsyncStorage.getItem('currentUser');
+    if (userStr) {
+      try {
+        setUserInfo(JSON.parse(userStr));
+      } catch (e) {
+        console.log('currentUser 파싱 에러:', e);
       }
-      // 팀 정보
-      const accessToken = await AsyncStorage.getItem('userToken');
-      if (accessToken) {
-        try {
-          const resp = await axios.get(`${API_BASE_URL}/teams/me`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          if (resp.data?.success && resp.data?.data) {
-            setTeamInfo(resp.data.data);
-            // userInfo(현재 로그인 유저 객체)에 teamId, team명 추가 저장
-            if (userStr) {
-              const prevUser = JSON.parse(userStr);
-              const merged = { ...prevUser, team: resp.data.data.teamName, teamId: resp.data.data.teamId };
-              setUserInfo(merged);
-              await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
-            }
+    }
+    const accessToken = await AsyncStorage.getItem('userToken');
+    if (accessToken) {
+      try {
+        const resp = await axios.get(`${API_BASE_URL}/teams/me`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (resp.data?.success && resp.data?.data) {
+          setTeamInfo(resp.data.data);
+          if (userStr) {
+            const prevUser = JSON.parse(userStr);
+            const merged = { ...prevUser, team: resp.data.data.teamName, teamId: resp.data.data.teamId };
+            setUserInfo(merged);
+            await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
           }
-        } catch (e) {
-          // 유저가 팀이 없으면 404 등으로 실패할 수도 있으니 무시 가능
-          console.log('팀 정보 조회 에러:', e);
         }
+      } catch (e) {
+        console.log('팀 정보 조회 에러:', e);
       }
-    };
+    }
+  };
+  useEffect(() => {
     fetchUserAndTeamInfo();
   }, []);
 
-  const displayName = userInfo?.name || 'guest';
+  // === 작품 등록 ===
+  const handleRegisterProject = async () => {
+    if (!userInfo?.roleInTeam || userInfo.roleInTeam !== '팀장') {
+      Alert.alert('권한 없음', '작품 등록은 팀장만 할 수 있습니다.');
+      return;
+    }
+
+    const accessToken = await AsyncStorage.getItem('userToken');
+    if (!accessToken || !teamInfo?.teamId) {
+      Alert.alert('오류', '로그인 또는 팀 정보가 필요합니다.');
+      return;
+    }
+
+    // 서버에 작품 등록 가능 확인 (이용할 API 필요, 예: GET /api/v1/exhibits/me or 팀Id로 조회)
+    try {
+      const resp = await axios.get(`${API_BASE_URL}/exhibits?teamId=${teamInfo.teamId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      // 예: resp.data.success와 작품 존재 여부(팀별 등록 작품 있으면 객체 반환)
+
+      if (resp.data.success && resp.data.data == null) {
+        // 작품이 없으므로 등록 페이지로 이동
+        navigation.navigate('ProjectRegister', { teamId: teamInfo.teamId });
+      } else {
+        Alert.alert('등록 불가', '이 팀은 이미 작품을 등록했습니다.');
+      }
+    } catch (e) {
+      Alert.alert('오류', '작품 상태 확인 중 오류가 발생했습니다.');
+    }
+  };
 
   // === 팀 생성 ===
   const handleCreateTeam = () => setShowTeamModal(true);
@@ -436,19 +461,19 @@ export default function MyPage({ navigation }) {
 
 
         </View>
-        <View style={styles.teamButtonRow}>
-          <TouchableOpacity style={styles.teamButton} onPress={handleCreateTeam}>
-            <Text style={styles.teamButtonText}>팀 생성</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.teamButton} onPress={handleInviteMember}>
-            <Text style={styles.teamButtonText}>팀원 초대</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.teamButton} onPress={handleInviteStatus}>
-            <Text style={styles.teamButtonText}>초대 현황</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem} onPress={handleCreateTeam}>
+            <Text style={styles.menuText}>팀 생성</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleInviteMember}>
+            <Text style={styles.menuText}>팀원 초대</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleRegisterProject}>
+            <Text style={styles.menuText}>작품 등록</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleInviteStatus}>
+            <Text style={styles.menuText}>초대 현황</Text>
+          </TouchableOpacity>
           {menuItems.map((item, idx) => (
             <TouchableOpacity key={idx} style={styles.menuItem}>
               <Text style={styles.menuText}>{item.title}</Text>
@@ -505,30 +530,7 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
   },
   menuText: { fontSize: 16, color: '#444' },
-  teamButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 20,
-    paddingHorizontal: 18,
-    gap: 4,
-  },
-  teamButton: {
-    flex: 1,
-    minWidth: 100,
-    marginHorizontal: 0,
-    backgroundColor: '#023560',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 40,
-  },
-  teamButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+
 
 });
 
