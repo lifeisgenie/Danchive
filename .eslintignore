@@ -1,0 +1,6 @@
+# Gradle / Spring Boot build 산출물
+build/
+build/**
+
+# 혹시 추가로 제외하고 싶은 것들
+node_modules/

@@ -18,14 +18,19 @@ const API_BASE_URL = 'http://100.66.95.13:8080/api/v1';
 // 유효성 검사 함수들
 const validatePassword = (password: string) => {
     const regex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,16}$/;
+
     if (!password) return "비밀번호를 입력해주세요.";
     if (!regex.test(password)) return "비밀번호는 8~16자, 영문, 숫자, 특수문자를 포함해야 합니다.";
+
     return null;
 };
 
 const validateEmail = (email: string) => {
     const regex = /\S+@\S+\.\S+/;
-    if (!email) return "유효한 이메일 형식이 아닙니다.";
+
+    if (!email) return "이메일을 입력해주세요.";
+    if (!regex.test(email)) return "유효한 이메일 형식이 아닙니다.";
+
     return null;
 };
 

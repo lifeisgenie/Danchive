@@ -31,6 +31,8 @@ const MainPage = () => {
   const [current, setCurrent] = useState(0);
   const flatRef = useRef(null);
 
+  const navigation = useNavigation();
+
   const renderCard = ({ item, index }) => (
     <View style={styles.cardContainer}>
       <Image 
@@ -109,7 +111,7 @@ const MainPage = () => {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.noticeItem}
-                    onPress={() => navigate('NoticeDetail', { noticeId: item.id })}
+                    onPress={() => navigation.navigate('NoticeDetail', { noticeId: item.id })}
                   >
                     <Text>{item.title}</Text>
                   </TouchableOpacity>
