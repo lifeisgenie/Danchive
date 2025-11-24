@@ -37,9 +37,11 @@ export default function MyPage({ navigation }) {
   const [isAcceptingInvite, setIsAcceptingInvite] = useState(false);
   const fetchUserAndTeamInfo = async () => {
     const userStr = await AsyncStorage.getItem('currentUser');
+    let prevUser = {};
     if (userStr) {
       try {
-        setUserInfo(JSON.parse(userStr));
+        prevUser = JSON.parse(userStr);
+        setUserInfo(prevUser);
       } catch (e) {
         console.log('currentUser 파싱 에러:', e);
       }
@@ -52,25 +54,31 @@ export default function MyPage({ navigation }) {
         });
         if (resp.data?.success && resp.data?.data) {
           setTeamInfo(resp.data.data);
-          if (userStr) {
-            const prevUser = JSON.parse(userStr);
-            const merged = { ...prevUser, team: resp.data.data.teamName, teamId: resp.data.data.teamId };
-            setUserInfo(merged);
-            await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
-          }
+          const teamData = resp.data.data;
+          const merged = {
+            ...prevUser,
+            team: teamData.teamName,
+            teamId: teamData.teamId,
+            // 기존 roleInTeam 유지하거나, 없으면 teamData에서 가져오거나 기본값 'member'
+            roleInTeam: prevUser.roleInTeam || teamData.roleInTeam || 'member',
+          };
+          setUserInfo(merged);
+          await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
         }
       } catch (e) {
         console.log('팀 정보 조회 에러:', e);
       }
     }
   };
+
+
   useEffect(() => {
     fetchUserAndTeamInfo();
   }, []);
 
   // === 작품 등록 ===
   const handleRegisterProject = async () => {
-    if (!userInfo?.roleInTeam || userInfo.roleInTeam !== '팀장') {
+    if (!userInfo?.roleInTeam || userInfo.roleInTeam !== 'leader') {
       Alert.alert('권한 없음', '작품 등록은 팀장만 할 수 있습니다.');
       return;
     }
@@ -95,8 +103,21 @@ export default function MyPage({ navigation }) {
         Alert.alert('등록 불가', '이 팀은 이미 작품을 등록했습니다.');
       }
     } catch (e) {
-      Alert.alert('오류', '작품 상태 확인 중 오류가 발생했습니다.');
+      console.log('작품 상태 확인 중 에러:', e);
+      if (e.response) {
+        // 서버가 응답했지만 에러 상태 코드인 경우
+        console.log('서버 응답 에러 데이터:', e.response.data);
+        Alert.alert('오류', e.response.data.message || '서버 오류가 발생했습니다.');
+      } else if (e.request) {
+        // 요청은 됐으나 응답이 없는 경우
+        console.log('응답 없음:', e.request);
+        Alert.alert('네트워크 오류', '서버 응답이 없습니다. 네트워크를 확인하세요.');
+      } else {
+        // 요청 설정 중 에러 등 기타 원인
+        Alert.alert('오류', e.message || '알 수 없는 오류가 발생했습니다.');
+      }
     }
+
   };
 
   // === 팀 생성 ===
@@ -105,6 +126,11 @@ export default function MyPage({ navigation }) {
   const submitCreateTeam = async () => {
     if (!teamName.trim()) {
       Alert.alert('알림', '팀 이름을 입력해 주세요.');
+      return;
+    }
+
+    if (userInfo?.teamId || userInfo?.team) {
+      Alert.alert('알림', '이미 팀에 소속되어 있습니다.');
       return;
     }
 
@@ -122,17 +148,16 @@ export default function MyPage({ navigation }) {
       );
 
       if (response.data?.success && response.data?.data) {
-        const { teamId, teamName: newTeamName, roleInTeam } = response.data.data;
+        const { teamId, teamName: newTeamName } = response.data.data;
         const updatedUserInfo = {
           ...(userInfo || {}),
           team: newTeamName,
           teamId,
-          roleInTeam,
+          roleInTeam: 'leader',  // 강제로 leader 역할 설정
         };
         setUserInfo(updatedUserInfo);
         await AsyncStorage.setItem('currentUser', JSON.stringify(updatedUserInfo));
-        // 추가로 팀 정보도 새로 불러오기 (fetchTeamInfo)
-        fetchUserAndTeamInfo();  // 위 useEffect 밖에서 따로 함수로 빼도 OK
+        fetchUserAndTeamInfo();
         setShowTeamModal(false);
         setTeamName('');
       }
@@ -449,6 +474,12 @@ export default function MyPage({ navigation }) {
                 {teamInfo?.members
                   ? teamInfo.members.map(m => m.name).join(', ')
                   : '정보 없음'}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>역할</Text>
+              <Text style={styles.value}>
+                {userInfo && userInfo.roleInTeam ? userInfo.roleInTeam : '정보 없음'}
               </Text>
             </View>
             <View style={styles.infoRow}>
