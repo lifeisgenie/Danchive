@@ -7,4 +7,5 @@ import java.util.*;
 public interface TeamInviteRepository extends JpaRepository<TeamInvite, Long> {
     Optional<TeamInvite> findByIdAndStatus(Long id, InviteStatus status);
     List<TeamInvite> findAllByEmailIgnoreCaseAndStatus(String email, InviteStatus status);
+    void deleteByTeam(Team team);
 }

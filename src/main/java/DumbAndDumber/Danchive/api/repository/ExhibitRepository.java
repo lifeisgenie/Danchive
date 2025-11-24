@@ -1,6 +1,7 @@
 package DumbAndDumber.Danchive.api.repository;
 
 import DumbAndDumber.Danchive.api.entity.Exhibit;
+import DumbAndDumber.Danchive.api.entity.Team;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -11,4 +12,5 @@ public interface ExhibitRepository extends JpaRepository<Exhibit, Long>, JpaSpec
     List<String> findDistinctTermsOrderByDesc();
 
     List<Exhibit> findByTermOrderByCreatedAtAsc(String term);
+    boolean existsByTeam(Team team);
 }

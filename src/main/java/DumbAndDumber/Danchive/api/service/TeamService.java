@@ -17,15 +17,18 @@ public class TeamService {
     private final TeamMembershipRepository membershipRepository;
     private final TeamInviteRepository inviteRepository;
     private final UserRepository userRepository;
+    private final ExhibitRepository exhibitRepository;
 
     public TeamService(TeamRepository teamRepository,
                        TeamMembershipRepository membershipRepository,
                        TeamInviteRepository inviteRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       ExhibitRepository exhibitRepository) {
         this.teamRepository = teamRepository;
         this.membershipRepository = membershipRepository;
         this.inviteRepository = inviteRepository;
         this.userRepository = userRepository;
+        this.exhibitRepository = exhibitRepository;
     }
 
     public TeamCreateResponse createTeam(Long currentUserId, String teamName) {
@@ -41,6 +44,25 @@ public class TeamService {
         membershipRepository.save(new TeamMembership(team, me, TeamRole.LEADER));
         return new TeamCreateResponse(team.getId(), teamName, TeamRole.LEADER.toWire());
     }
+
+    public void deleteTeam(Long currentUserId, Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NoSuchElementException("team not found"));
+        TeamMembership myMembership = membershipRepository
+                .findByTeam_IdAndUser_Id(teamId, currentUserId)
+                .orElseThrow(() -> new SecurityException("not a team member"));
+        if (myMembership.getRole() != TeamRole.LEADER) {
+            throw new SecurityException("only team leader can delete team");
+        }
+        boolean hasExhibits = exhibitRepository.existsByTeam(team);
+        if (hasExhibits) {
+            throw new IllegalStateException("작품이 등록된 팀은 삭제할 수 없습니다.");
+        }
+        inviteRepository.deleteByTeam(team);
+        membershipRepository.deleteByTeam(team);
+        teamRepository.delete(team);
+    }
+
 
     public TeamInviteSendResponse sendInvite(Long currentUserId, Long teamId, String email) {
         ensureLeader(teamId, currentUserId);

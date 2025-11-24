@@ -6,6 +6,7 @@ import DumbAndDumber.Danchive.api.service.TeamService;
 import DumbAndDumber.Danchive.api.util.SecurityUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,6 +20,13 @@ public class TeamController {
         Long userId = SecurityUtil.getCurrentUserId();
         var data = teamService.createTeam(userId, req.getTeamName());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "팀이 생성되었습니다.", data));
+    }
+
+    @DeleteMapping("/{teamId}")
+    public ResponseEntity<ApiResponse<Void>> deleteTeam(@PathVariable Long teamId) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        teamService.deleteTeam(currentUserId, teamId);
+        return ResponseEntity.ok(ApiResponse.success("팀이 삭제되었습니다."));
     }
 
     @PostMapping("/{teamId}/invites")
