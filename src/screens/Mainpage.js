@@ -107,6 +107,16 @@ export default function Mainpage({ navigation }) {
           <>
             <View style={styles.header}>
               <Image source={require('./assets/logo.png')} style={styles.logo} />
+              <TouchableOpacity
+                style={styles.alarmButton}
+                onPress={() => navigation.navigate('NotificationList')}
+              >
+                <Image
+                  source={require('./assets/notification.png')}
+                  style={styles.alarmIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             </View>
             <View style={styles.titleArea}>
               <Text style={styles.title}>
@@ -185,6 +195,26 @@ export default function Mainpage({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', marginTop: 12, marginBottom: 8 },
+  alarmButton: {
+    position: 'absolute',
+    right: 18,
+    top: 2,
+    padding: 6,
+    zIndex: 2,
+  },
+  alarmIcon: {
+    width: 26,
+    height: 26,
+    tintColor: '#222', // 필요 시 색상 조정
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+    // position: 'relative' 기본(알람 버튼 오른쪽에 배치)
+  },
+
   logo: { width: 46, height: 25, marginLeft: 16 },
   titleArea: { marginLeft: 16, marginBottom: 8 },
   title: { fontSize: 20, fontWeight: 800, lineHeight: 30 },
