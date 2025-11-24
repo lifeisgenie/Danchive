@@ -68,7 +68,6 @@ export default function Mainpage({ navigation }) {
     fetchNotices();
   }, []);
 
-
   const renderCard = ({ item, index }) => (
     <View style={styles.cardContainer}>
       <Image source={item} style={styles.cardImage} resizeMode="stretch" />
