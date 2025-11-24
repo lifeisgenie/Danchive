@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, Text, View, ActivityIndicator } from 'react-native';
-import Mainpage from './src/screens/MainPage';
+import Mainpage from './src/screens/Mainpage';
 import MyPage from './src/screens/MyPage';
 import NoticeDetail from './src/screens/NoticeDetail';
 import NotificationList from './src/screens/NotificationList';
