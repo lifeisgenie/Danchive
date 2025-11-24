@@ -27,14 +27,6 @@ public class ExhibitDetailDto {
     private String posterUrl;
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-    public static class PptDto {
-        private String name;
-        private String previewUrl;
-        private String downloadUrl;
-    }
-    private PptDto ppt;
-
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class StatsDto {
         private long views;
         private long likes;

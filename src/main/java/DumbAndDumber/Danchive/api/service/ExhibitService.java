@@ -84,17 +84,11 @@ public class ExhibitService {
                 .map(m -> ExhibitDetailDto.MemberDto.builder().name(m.getUser().getName()).role(m.getRole()).build())
                 .toList();
 
-        ExhibitDetailDto.PptDto ppt = null;
-        if (e.getPptName() != null) {
-            ppt = ExhibitDetailDto.PptDto.builder()
-                    .name(e.getPptName()).previewUrl(e.getPptPreviewUrl()).downloadUrl(e.getPptDownloadUrl()).build();
-        }
-
         return ExhibitDetailDto.builder()
                 .id(e.getId()).term(e.getTerm()).title(e.getTitle()).intro(e.getIntro())
                 .categories(e.getCategories()).members(members)
                 .thumbnailUrl(e.getThumbnailUrl()).posterUrl(e.getPosterUrl())
-                .ppt(ppt).stats(new ExhibitDetailDto.StatsDto(e.getViews(), likes)).awards(e.getAwards())
+                .stats(new ExhibitDetailDto.StatsDto(e.getViews(), likes)).awards(e.getAwards())
                 .build();
     }
 
@@ -112,19 +106,12 @@ public class ExhibitService {
         if (req.getPoster() == null || req.getPoster().isEmpty()) throw new IllegalArgumentException("poster is required");
 
         String posterUrl = upload("posters/", req.getPoster());
-        String thumbUrl  = generateThumbAndUpload(req.getPoster(), "thumbnails/");
-
-        String pptName = null, pptDownloadUrl = null;
-        if (req.getPpt() != null && !req.getPpt().isEmpty()) {
-            pptName = Optional.ofNullable(req.getPpt().getOriginalFilename()).orElse("발표자료.pptx");
-            pptDownloadUrl = upload("ppt/origin/", req.getPpt());
-        }
+        String thumbUrl  = posterUrl;
 
         Exhibit e = Exhibit.builder()
                 .term(req.getTerm()).title(req.getTitle()).intro(req.getIntro()).shortIntro(req.getShortIntro())
                 .categories(new LinkedHashSet<>(req.getCategories()))
-                .team(team).posterUrl(posterUrl).thumbnailUrl(thumbUrl)
-                .pptName(pptName).pptDownloadUrl(pptDownloadUrl)
+                .team(team).posterUrl(posterUrl).thumbnailUrl(posterUrl)
                 .published(true)
                 .build();
 
@@ -149,10 +136,6 @@ public class ExhibitService {
             if (req.getPoster()!=null && !req.getPoster().isEmpty()) {
                 e.setPosterUrl(upload("posters/", req.getPoster()));
                 e.setThumbnailUrl(generateThumbAndUpload(req.getPoster(), "thumbnails/"));
-            }
-            if (req.getPpt()!=null && !req.getPpt().isEmpty()) {
-                e.setPptName(Optional.ofNullable(req.getPpt().getOriginalFilename()).orElse("발표자료.pptx"));
-                e.setPptDownloadUrl(upload("ppt/origin/", req.getPpt()));
             }
         }
         return e.getId();
@@ -207,19 +190,12 @@ public class ExhibitService {
         if (req.getPoster() == null || req.getPoster().isEmpty()) throw new IllegalArgumentException("poster is required");
 
         String posterUrl = upload("posters/", req.getPoster());
-        String thumbUrl  = generateThumbAndUpload(req.getPoster(), "thumbnails/");
-
-        String pptName = null, pptDownloadUrl = null;
-        if (req.getPpt() != null && !req.getPpt().isEmpty()) {
-            pptName = Optional.ofNullable(req.getPpt().getOriginalFilename()).orElse("발표자료.pptx");
-            pptDownloadUrl = upload("ppt/origin/", req.getPpt());
-        }
+        String thumbUrl  = posterUrl;
 
         Exhibit e = Exhibit.builder()
                 .term(req.getTerm()).title(req.getTitle()).intro(req.getIntro()).shortIntro(req.getShortIntro())
                 .categories(new LinkedHashSet<>(req.getCategories()))
                 .team(team).posterUrl(posterUrl).thumbnailUrl(thumbUrl)
-                .pptName(pptName).pptDownloadUrl(pptDownloadUrl)
                 .published(true)
                 .build();
 
@@ -240,12 +216,9 @@ public class ExhibitService {
             e.setCategories(new LinkedHashSet<>(req.getCategories()));
 
         if (req.getPoster()!=null && !req.getPoster().isEmpty()) {
-            e.setPosterUrl(upload("posters/", req.getPoster()));
-            e.setThumbnailUrl(generateThumbAndUpload(req.getPoster(), "thumbnails/"));
-        }
-        if (req.getPpt()!=null && !req.getPpt().isEmpty()) {
-            e.setPptName(Optional.ofNullable(req.getPpt().getOriginalFilename()).orElse("발표자료.pptx"));
-            e.setPptDownloadUrl(upload("ppt/origin/", req.getPpt()));
+            String posterUrl = upload("posters/", req.getPoster());
+            e.setPosterUrl(posterUrl);
+            e.setThumbnailUrl(posterUrl);
         }
         if (req.getPublished()!=null) e.setPublished(req.getPublished());
 
