@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, Text, View, ActivityIndicator } from 'react-native';
-import Mainpage from './src/screens/Mainpage';
+import MainPage from './src/screens/MainPage';
 import MyPage from './src/screens/MyPage';
 import NoticeDetail from './src/screens/NoticeDetail';
 import NotificationList from './src/screens/NotificationList';
@@ -29,7 +29,7 @@ function TabNavigator() {
   // 탭 or 아이콘 추가
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Main" component={Mainpage} />
+      <Tab.Screen name="Main" component={MainPage} />
       <Tab.Screen name="Exhibitions" component={ExhibitionList} />
       <Tab.Screen name="MyPage" component={MyPage} />
     </Tab.Navigator>
@@ -42,7 +42,7 @@ function AuthStack() {
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="SignIn" component={SignInPage} />
       <Stack.Screen name="SignUp" component={SignUpPage} />
-      <Stack.Screen name="MainPage" component={Mainpage} />
+      <Stack.Screen name="MainPage" component={MainPage} />
       <Stack.Screen name="MyPage" component={MyPage} />
       <Stack.Screen name="NoticeDetail" component={NoticeDetail} />
       <Stack.Screen name="NotificationList" component={NotificationList} />

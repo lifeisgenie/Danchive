@@ -56,7 +56,7 @@ export default function SignInPage({ navigation }) {
             if (response.data.success) {
                 const { access_token } = response.data.data;
                 await AsyncStorage.setItem('userToken', access_token);
-                await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+                await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.data.user));
                 navigation.replace('Tabs', { screen: 'Main' });
             } else {
                 setApiError(response.data.message || "로그인에 실패했습니다.");
