@@ -44,6 +44,8 @@ public class SecurityConfig {
                         // 프리플라이트는 무조건 통과
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        .requestMatchers("/files/**").permitAll()
+
                         // 공개 엔드포인트
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
