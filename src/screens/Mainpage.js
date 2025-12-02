@@ -186,7 +186,7 @@ export default function Mainpage({ navigation }) {
             </View>
           </>
         }
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 80 }}
       />
     </SafeAreaView>
   );
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     // position: 'relative' 기본(알람 버튼 오른쪽에 배치)
   },
 
-  logo: { width: 46, height: 25, marginLeft: 16 },
+  logo: { width: 100, height: 25, marginLeft: 16, marginTop: 10, resizeMode: 'contain' },
   titleArea: { marginLeft: 16, marginBottom: 8 },
   title: { fontSize: 20, fontWeight: 800, lineHeight: 30 },
   sliderArea: { alignItems: 'center', marginBottom: 16 },

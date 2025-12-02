@@ -35,41 +35,84 @@ export default function MyPage({ navigation }) {
   const [inviteList, setInviteList] = useState([]);
   const [selectedInviteId, setSelectedInviteId] = useState(null);
   const [isAcceptingInvite, setIsAcceptingInvite] = useState(false);
-  const fetchUserAndTeamInfo = async () => {
-    const userStr = await AsyncStorage.getItem('currentUser');
-    let prevUser = {};
-    if (userStr) {
-      try {
-        prevUser = JSON.parse(userStr);
-        setUserInfo(prevUser);
-      } catch (e) {
-        console.log('currentUser 파싱 에러:', e);
+  // 작품 목록 조회 함수 추가
+  const fetchProjectTitle = async (teamName) => {
+    if (!teamName) return null;
+    try {
+      const resp = await axios.get(`${API_BASE_URL.replace('/api/v1', '/api/v1/exhibits')}?teamName=${encodeURIComponent(teamName)}`);
+      // 위 URL은 실제 서버 라우팅에 맞게 수정 필요
+      if (resp.data?.success && Array.isArray(resp.data.data.content)) {
+        const myTeamProject = resp.data.data.content.find(
+          (p) => p.teamName === teamName
+        );
+        return myTeamProject ? myTeamProject.title : null;
       }
+    } catch (e) {
+      console.log('작품 조회 에러:', e);
     }
+    return null;
+  };
+
+  const fetchUserAndTeamInfo = async () => {
     const accessToken = await AsyncStorage.getItem('userToken');
-    if (accessToken) {
-      try {
-        const resp = await axios.get(`${API_BASE_URL}/teams/me`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        if (resp.data?.success && resp.data?.data) {
-          setTeamInfo(resp.data.data);
-          const teamData = resp.data.data;
-          const merged = {
-            ...prevUser,
-            team: teamData.teamName,
-            teamId: teamData.teamId,
-            // 기존 roleInTeam 유지하거나, 없으면 teamData에서 가져오거나 기본값 'member'
-            roleInTeam: prevUser.roleInTeam || teamData.roleInTeam || 'member',
-          };
-          setUserInfo(merged);
-          await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
-        }
-      } catch (e) {
-        console.log('팀 정보 조회 에러:', e);
+    if (!accessToken) return;
+
+    try {
+      const userStr = await AsyncStorage.getItem('currentUser');
+      let prevUser = {};
+      if (userStr) {
+        try {
+          prevUser = JSON.parse(userStr);
+          setUserInfo(prevUser);
+        } catch (e) { }
       }
+
+      const resp = await axios.get(`${API_BASE_URL}/teams/me`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      if (resp.data?.success && resp.data?.data) {
+        const teamData = resp.data.data;
+        setTeamInfo(teamData);
+
+        let role = null;
+        if (prevUser.userId && Array.isArray(teamData.members)) {
+          const myinfo = teamData.members.find(m => m.userId === prevUser.userId);
+          if (myinfo) role = myinfo.roleInTeam || null;
+        } else if (prevUser.name) {
+          const myinfo = teamData.members.find(m => m.name === prevUser.name);
+          if (myinfo) role = myinfo.roleInTeam || null;
+        }
+
+        // 작품명 추가 fetch
+        let projectTitle = null;
+        if (teamData.teamName) {
+          projectTitle = await fetchProjectTitle(teamData.teamName);
+        }
+
+        const merged = {
+          ...prevUser,
+          team: teamData.teamName,
+          teamId: teamData.teamId,
+          roleInTeam: role,
+          projectTitle,
+        };
+
+        setUserInfo(merged);
+        await AsyncStorage.setItem('currentUser', JSON.stringify(merged));
+      } else {
+        setTeamInfo(null);
+        setUserInfo({ ...prevUser, team: null, teamId: null, roleInTeam: null, projectTitle: null });
+        await AsyncStorage.setItem('currentUser', JSON.stringify({ ...prevUser, team: null, teamId: null, roleInTeam: null, projectTitle: null }));
+      }
+    } catch (e) {
+      console.log('팀 정보 조회 에러:', e);
+      setTeamInfo(null);
     }
   };
+
+  // useEffect({ ... }) 포함 기존 구조 동일
+
 
 
   useEffect(() => {
@@ -82,43 +125,14 @@ export default function MyPage({ navigation }) {
       Alert.alert('권한 없음', '작품 등록은 팀장만 할 수 있습니다.');
       return;
     }
-
-    const accessToken = await AsyncStorage.getItem('userToken');
-    if (!accessToken || !teamInfo?.teamId) {
-      Alert.alert('오류', '로그인 또는 팀 정보가 필요합니다.');
+    if (!teamInfo?.teamId) {
+      Alert.alert('오류', '팀 정보가 필요합니다.');
       return;
     }
-
-    // 서버에 작품 등록 가능 확인 (이용할 API 필요, 예: GET /api/v1/exhibits/me or 팀Id로 조회)
-    try {
-      const resp = await axios.get(`${API_BASE_URL}/exhibits?teamId=${teamInfo.teamId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      // 예: resp.data.success와 작품 존재 여부(팀별 등록 작품 있으면 객체 반환)
-
-      if (resp.data.success && resp.data.data == null) {
-        // 작품이 없으므로 등록 페이지로 이동
-        navigation.navigate('ProjectRegister', { teamId: teamInfo.teamId });
-      } else {
-        Alert.alert('등록 불가', '이 팀은 이미 작품을 등록했습니다.');
-      }
-    } catch (e) {
-      console.log('작품 상태 확인 중 에러:', e);
-      if (e.response) {
-        // 서버가 응답했지만 에러 상태 코드인 경우
-        console.log('서버 응답 에러 데이터:', e.response.data);
-        Alert.alert('오류', e.response.data.message || '서버 오류가 발생했습니다.');
-      } else if (e.request) {
-        // 요청은 됐으나 응답이 없는 경우
-        console.log('응답 없음:', e.request);
-        Alert.alert('네트워크 오류', '서버 응답이 없습니다. 네트워크를 확인하세요.');
-      } else {
-        // 요청 설정 중 에러 등 기타 원인
-        Alert.alert('오류', e.message || '알 수 없는 오류가 발생했습니다.');
-      }
-    }
-
+    // 바로 등록 페이지로 이동 (서버에서 중복등록 시도 시 안내 메시지 제공)
+    navigation.navigate('ProjectRegister', { teamId: teamInfo.teamId });
   };
+
 
   // === 팀 생성 ===
   const handleCreateTeam = () => setShowTeamModal(true);
@@ -153,7 +167,7 @@ export default function MyPage({ navigation }) {
           ...(userInfo || {}),
           team: newTeamName,
           teamId,
-          roleInTeam: 'leader',  // 강제로 leader 역할 설정
+          roleInTeam: 'leader',
         };
         setUserInfo(updatedUserInfo);
         await AsyncStorage.setItem('currentUser', JSON.stringify(updatedUserInfo));
@@ -257,7 +271,19 @@ export default function MyPage({ navigation }) {
         Alert.alert('수락 완료', resp.data.message || '초대를 수락했습니다.');
         setShowInviteList(false);
         setSelectedInviteId(null);
+
+        // 역할을 member로 할당
+        if (userInfo) {
+          const updatedUserInfo = {
+            ...userInfo,
+            roleInTeam: 'member',
+          };
+          setUserInfo(updatedUserInfo);
+          await AsyncStorage.setItem('currentUser', JSON.stringify(updatedUserInfo));
+        }
+
         // 필요 시 팀 정보 리로드 등 추가
+        fetchUserAndTeamInfo();
       } else {
         Alert.alert('실패', resp.data?.message || '초대 수락에 실패했습니다.');
       }
@@ -267,6 +293,7 @@ export default function MyPage({ navigation }) {
       setIsAcceptingInvite(false);
     }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -416,7 +443,7 @@ export default function MyPage({ navigation }) {
                   onPress={() => setSelectedInviteId(invite.inviteId)}
                 >
                   <Text style={{ fontWeight: '600' }}>{invite.teamName}</Text>
-                  <Text style={{ fontSize: 12, color: '#555' }}>상태: {invite.status}</Text>
+                  <Text style={{ fontSize: 12, color: '#555' }}>상태: 수락 대기 중</Text>
                   <Text style={{ fontSize: 12, color: '#999' }}>초대일: {invite.invitedAt?.slice(0, 10)}</Text>
                 </TouchableOpacity>
               ))
@@ -441,7 +468,12 @@ export default function MyPage({ navigation }) {
         </View>
       </Modal>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: 60,
+        backgroundColor: '#fff'
+      }}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.logoWrapper}>
           <Image source={require('./assets/logo.png')} style={styles.logo} />
         </View>
@@ -451,7 +483,7 @@ export default function MyPage({ navigation }) {
             source={
               userInfo && userInfo.profile
                 ? userInfo.profile
-                : require('./assets/profile.jpg') // 기본 이미지
+                : require('./assets/profile.png') // 기본 이미지
             }
             style={styles.profileImage}
           />
@@ -470,22 +502,36 @@ export default function MyPage({ navigation }) {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>팀원</Text>
-              <Text style={styles.value}>
-                {teamInfo?.members
-                  ? teamInfo.members.map(m => m.name).join(', ')
-                  : '정보 없음'}
-              </Text>
+              <View style={{ flex: 1 }}>
+                {teamInfo?.members && teamInfo.members.length > 0 ? (
+                  teamInfo.members.map((m, idx) => (
+                    <Text key={idx} style={styles.value}>
+                      {m.name}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={styles.value}>정보 없음</Text>
+                )}
+              </View>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>역할</Text>
               <Text style={styles.value}>
-                {userInfo && userInfo.roleInTeam ? userInfo.roleInTeam : '정보 없음'}
+                {
+                  userInfo && typeof userInfo.roleInTeam === 'string' && userInfo.roleInTeam.length > 0
+                    ? userInfo.roleInTeam === 'leader'
+                      ? '팀장'
+                      : userInfo.roleInTeam === 'member'
+                        ? '팀원'
+                        : userInfo.roleInTeam
+                    : '정보 없음'
+                }
               </Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>작품</Text>
               <Text style={styles.value}>
-                {userInfo && userInfo.project ? userInfo.project : '정보 없음'}
+                {userInfo && userInfo.projectTitle ? userInfo.projectTitle : '정보 없음'}
               </Text>
             </View>
           </View>
@@ -513,13 +559,14 @@ export default function MyPage({ navigation }) {
 
           {/* 로그아웃 */}
           <TouchableOpacity
-            style={[styles.menuItem, { backgroundColor: '#f7eaea' }]}
+            style={styles.menuItem}
             onPress={handleLogout}
           >
-            <Text style={[styles.menuText, { color: 'red', fontWeight: 'bold' }]}>
+            <Text style={[styles.menuText, { color: '#e63a3a', fontWeight: 'bold' }]}>
               로그아웃
             </Text>
           </TouchableOpacity>
+
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -528,8 +575,8 @@ export default function MyPage({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  logoWrapper: { marginTop: 20, marginLeft: 18, marginBottom: 18 },
-  logo: { width: 50, height: 18, resizeMode: 'contain' },
+  logoWrapper: { marginTop: 12, marginLeft: 16, marginBottom: 18 },
+  logo: { width: 100, height: 25, marginTop: 10, resizeMode: 'contain' },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -541,7 +588,7 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 12,
     marginRight: 24,
-    backgroundColor: '#ddd',
+    marginTop: 40,
   },
   infoSection: { flex: 1 },
   infoRow: {
