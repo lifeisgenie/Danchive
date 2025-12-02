@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, Text, View, ActivityIndicator } from 'react-native';
+import { StatusBar, StyleSheet, useColorScheme, Text, View, ActivityIndicator, Image } from 'react-native';
 import MainPage from './src/screens/MainPage';
 import MyPage from './src/screens/MyPage';
 import NoticeDetail from './src/screens/NoticeDetail';
@@ -8,13 +8,12 @@ import ProjectList from './src/screens/ProjectList';
 import ExhibitionList from './src/screens/ExhibitionList';
 import ProjectPage from './src/screens/ProjectPage';
 import ProjectRegister from './src/screens/ProjectRegister';
+import ProfEvaluation from './src/screens/ProfEvaluation';
+import UserEvaluation from './src/screens/UserEvaluation';
 
-
-//jw
 import LandingScreen from './src/screens/Auth/index';
 import SignInPage from './src/screens/Auth/signin';
 import SignUpPage from './src/screens/Auth/signup';
-
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -24,11 +23,42 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
-const NOTIFICATION_KEY = 'notificationList';
+
 function TabNavigator() {
-  // 탭 or 아이콘 추가
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: false, // 글자 없애기
+        tabBarStyle: {
+          backgroundColor: 'white', // 배경
+          borderTopWidth: 0,
+          elevation: 0,
+          position: 'absolute', // 필요하면 아래 고정
+        },
+        tabBarIcon: ({ focused }) => {
+          let icon;
+          if (route.name === 'Main') {
+            icon = require('./src/screens/assets/home.png');
+          } else if (route.name === 'Exhibitions') {
+            icon = require('./src/screens/assets/exhibitions.png');
+          } else if (route.name === 'MyPage') {
+            icon = require('./src/screens/assets/mypage.png');
+          }
+          return (
+            <Image
+              source={icon}
+              style={{
+                width: 28,
+                height: 28,
+                opacity: focused ? 1 : 0.5, // 선택시 밝게, 미선택시 반투명
+              }}
+              resizeMode="contain"
+            />
+          );
+        }
+      })}
+    >
       <Tab.Screen name="Main" component={MainPage} />
       <Tab.Screen name="Exhibitions" component={ExhibitionList} />
       <Tab.Screen name="MyPage" component={MyPage} />
@@ -50,6 +80,8 @@ function AuthStack() {
       <Stack.Screen name="ExhibitionList" component={ExhibitionList} />
       <Stack.Screen name="ProjectPage" component={ProjectPage} />
       <Stack.Screen name="ProjectRegister" component={ProjectRegister} />
+      <Stack.Screen name="ProfEvaluation" component={ProfEvaluation} />
+      <Stack.Screen name="UserEvaluation" component={UserEvaluation} />
     </Stack.Navigator>
   );
 }
@@ -87,19 +119,18 @@ function RootNavigator() {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="Auth" component={AuthStack} />
-
       <Stack.Screen name="Tabs" component={TabNavigator} />
-
-      <Stack.Screen
-        name="NoticeDetail"
-        component={NoticeDetail}
-        options={{ headerShown: true, title: '공지사항 상세' }}
-      />
+      <Stack.Screen name="NoticeDetail" component={NoticeDetail} options={{ headerShown: true, title: '공지사항 상세' }} />
       <Stack.Screen name="NotificationList" component={NotificationList} options={{ headerShown: true, title: '알림 목록' }} />
+      <Stack.Screen name="ProjectList" component={ProjectList}/>
+      <Stack.Screen name="ExhibitionList" component={ExhibitionList} />
+      <Stack.Screen name="ProjectPage" component={ProjectPage} />
+      <Stack.Screen name="ProjectRegister" component={ProjectRegister} options={{ headerShown: true, title: '작품 등록' }} />
+      <Stack.Screen name="ProfEvaluation" component={ProfEvaluation} />
+      <Stack.Screen name="UserEvaluation" component={UserEvaluation} />
     </Stack.Navigator>
   );
 }
-
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -113,7 +144,6 @@ function App() {
     </SafeAreaProvider>
   );
 }
-
 
 const styles = StyleSheet.create({
   loadingContainer: {
