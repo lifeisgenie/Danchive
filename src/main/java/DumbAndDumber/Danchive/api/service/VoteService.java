@@ -3,15 +3,11 @@ package DumbAndDumber.Danchive.api.service;
 import DumbAndDumber.Danchive.api.dto.form.ExhibitRankingResponse;
 import DumbAndDumber.Danchive.api.dto.form.PopularVoteRequest;
 import DumbAndDumber.Danchive.api.dto.form.ProfessorEvaluationRequest;
-import DumbAndDumber.Danchive.api.entity.Exhibit;
-import DumbAndDumber.Danchive.api.entity.ExhibitAward;
-import DumbAndDumber.Danchive.api.entity.PopularVote;
-import DumbAndDumber.Danchive.api.entity.PopularVoterType;
-import DumbAndDumber.Danchive.api.entity.ProfessorEvaluation;
-import DumbAndDumber.Danchive.api.entity.User;
+import DumbAndDumber.Danchive.api.entity.*;
 import DumbAndDumber.Danchive.api.repository.ExhibitRepository;
 import DumbAndDumber.Danchive.api.repository.PopularVoteRepository;
 import DumbAndDumber.Danchive.api.repository.ProfessorEvaluationRepository;
+import DumbAndDumber.Danchive.api.repository.UserRepository;
 import DumbAndDumber.Danchive.api.util.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +24,7 @@ public class VoteService {
     private final ExhibitRepository exhibitRepository;
     private final PopularVoteRepository popularVoteRepository;
     private final ProfessorEvaluationRepository professorEvaluationRepository;
+    private final UserRepository userRepository;
 
     /**
      * 인기상 투표 (방문객 + 참여 팀)
@@ -45,7 +42,7 @@ public class VoteService {
         PopularVoterType voterType;
         User voter = null;
 
-        if (currentUser != null && "team".equals(currentUser.getRole())) {
+        if (hasRole(currentUser, Role.TEAM)) {
             voter = currentUser;
             voterType = PopularVoterType.TEAM;
 
@@ -80,7 +77,7 @@ public class VoteService {
      */
     public void submitProfessorEvaluation(ProfessorEvaluationRequest request) {
         User professor = SecurityUtil.getCurrentUserOrThrow();
-        if (!"prof".equals(professor.getRole())) {
+        if (!hasRole(professor, Role.PROF)) {
             throw new IllegalArgumentException("교수 권한이 필요합니다.");
         }
 
@@ -105,6 +102,10 @@ public class VoteService {
         evaluation.setComment(request.getComment());
 
         professorEvaluationRepository.save(evaluation);
+
+        // ★ 이 학기(term)에 대한 모든 교수 평가가 끝났다면
+        //    자동으로 대상/최우수상/우수상/인기상 7개를 Exhibit.awards 에 반영
+        maybeFinalizeAwardsForTerm(exhibit.getTerm());
     }
 
     /**
@@ -180,7 +181,7 @@ public class VoteService {
      */
     public void deletePopularVote(Long voteId) {
         User admin = SecurityUtil.getCurrentUserOrThrow();
-        if (!"admin".equals(admin.getRole())) {
+        if (!hasRole(admin, Role.ADMIN)) {
             throw new IllegalArgumentException("관리자만 삭제할 수 있습니다.");
         }
         popularVoteRepository.deleteById(voteId);
@@ -278,7 +279,33 @@ public class VoteService {
         }
     }
 
+    /**
+     * ★ 모든 교수 × 모든 작품 평가가 끝났을 때만
+     *    대상/최우수상/우수상/인기상 7개를 자동 반영
+     */
+    private void maybeFinalizeAwardsForTerm(String term) {
+        // 이번 학기 작품 목록
+        List<Exhibit> exhibits = exhibitRepository.findByTermOrderByCreatedAtAsc(term);
+        if (exhibits.isEmpty()) return;
+
+        // 이번 전시 평가에 참여하는 교수 목록 (role = "prof")
+        List<User> professors = userRepository.findByRole(Role.PROF);
+        if (professors.isEmpty()) return;
+
+        long expected = (long) exhibits.size() * professors.size(); // 작품 × 교수 수
+        long actual = professorEvaluationRepository.countByExhibit_Term(term);
+
+        // 모든 (작품, 교수) 조합에 대해 평가가 들어왔을 때만 상 확정
+        if (expected > 0 && actual == expected) {
+            calculateAndApplyAwards(term);
+        }
+    }
+
     private record PopularSummary(long count, double avgScore) {
         static final PopularSummary EMPTY = new PopularSummary(0L, 0.0);
+    }
+
+    private boolean hasRole(User user, Role role) {
+        return user != null && user.getRole() == role;
     }
 }

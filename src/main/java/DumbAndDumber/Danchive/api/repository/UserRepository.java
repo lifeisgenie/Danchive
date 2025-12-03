@@ -1,5 +1,6 @@
 package DumbAndDumber.Danchive.api.repository;
 
+import DumbAndDumber.Danchive.api.entity.Role;
 import DumbAndDumber.Danchive.api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,4 +12,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAccessToken(String token);
     List<User> findAllByFcmTokenIsNotNull();
     boolean existsByEmail(String email);
-}
+    List<User> findByRole(Role role);}
