@@ -129,6 +129,7 @@ export default function ProjectList({ route, navigation }) {
     };
 
 
+
     return (
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
             {/* 상단 로고 + 검색바 */}
@@ -223,6 +224,7 @@ const styles = StyleSheet.create({
         height: 14,
         resizeMode: 'contain',
     },
+
 
 
     searchWrap: {

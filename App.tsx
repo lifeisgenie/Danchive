@@ -120,7 +120,7 @@ function RootNavigator() {
     >
       <Stack.Screen name="Auth" component={AuthStack} />
       <Stack.Screen name="Tabs" component={TabNavigator} />
-      <Stack.Screen name="NoticeDetail" component={NoticeDetail} options={{ headerShown: true, title: '공지사항 상세' }} />
+      <Stack.Screen name="NoticeDetail" component={NoticeDetail} />
       <Stack.Screen name="NotificationList" component={NotificationList} options={{ headerShown: true, title: '알림 목록' }} />
       <Stack.Screen name="ProjectList" component={ProjectList}/>
       <Stack.Screen name="ExhibitionList" component={ExhibitionList} />
