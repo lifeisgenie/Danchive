@@ -111,7 +111,6 @@ export default function MyPage({ navigation }) {
     }
   };
 
-  // useEffect({ ... }) 포함 기존 구조 동일
 
 
 

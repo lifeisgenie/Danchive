@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Image,
+    ScrollView,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    TouchableOpacity
+} from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://100.84.161.55:8080/api/v1';
 const { width: screenWidth } = Dimensions.get('window');
@@ -10,22 +21,26 @@ export default function ProjectDetail({ route, navigation }) {
     const { projectId } = route.params;
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
         const fetchDetail = async () => {
             setLoading(true);
             try {
                 const resp = await axios.get(`${API_BASE_URL}/exhibits/${projectId}`);
-                console.log("API 응답:", resp.data?.data);
+                console.log("API 응답 전체:", resp.data);
+                console.log("API 응답 data:", resp.data?.data);
                 setDetail(resp.data?.data);
             } catch (e) {
                 Alert.alert('서버 오류', e.response?.data?.message || '네트워크 오류');
                 setDetail(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchDetail();
     }, [projectId]);
+
     useEffect(() => {
         const loadCurrentUser = async () => {
             try {
@@ -40,40 +55,39 @@ export default function ProjectDetail({ route, navigation }) {
         };
         loadCurrentUser();
     }, []);
-    useEffect(() => {
-        const fetchDetail = async () => {
-            setLoading(true);
-            try {
-                const resp = await axios.get(`${API_BASE_URL}/exhibits/${teamName}`);
-                console.log("API 응답:", resp.data?.data);
-                setDetail(resp.data?.data);
-            } catch (e) {
-                Alert.alert('서버 오류', e.response?.data?.message || '네트워크 오류');
-                setDetail(null);
-            }
-            setLoading(false);
-        };
-        fetchDetail();
-    }, [teamName]);
+
     if (loading || !detail) {
-        return <ActivityIndicator style={{ margin: 44 }} size="large" color="#123" />;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#123" />
+            </View>
+        );
     }
 
-    // 이미지 URL 조립 시, 중복 슬래시 문제 방지
+    // 이미지 URL 조립
     const imgUri = detail.thumbnailUrl
         ? `${API_BASE_URL.replace('/api/v1', '/files')}/${detail.thumbnailUrl}`
         : null;
 
+    console.log('전체 detail 데이터:', JSON.stringify(detail, null, 2));
 
-    console.log('최종 이미지 URL:', imgUri);
+    // 팀명 우선순위: title > teamName > name > members[0].name
+    const teamName = detail.title ||
+        detail.teamName ||
+        detail.name ||
+        (detail.members?.[0]?.name) ||
+        'Danchive'; // 기본값
+
+    console.log('최종 teamName:', teamName); // 🔍 디버깅용
 
     const teamMembers = Array.isArray(detail.members)
         ? detail.members.map(m => m.name).join(', ')
-        : detail.teamName || '';
+        : teamName;
 
     const handleEvaluatePress = () => {
-        const role = currentUser?.role;
+        console.log('평가 이동:', { projectId, teamName }); // 🔍 디버깅용
 
+        const role = currentUser?.role;
         if (role === 'prof') {
             navigation.navigate('ProfEvaluation', { projectId, teamName });
         } else {
@@ -86,6 +100,7 @@ export default function ProjectDetail({ route, navigation }) {
             <View style={styles.logoWrap}>
                 <Image source={require('./assets/logo.png')} style={styles.logo} resizeMode="contain" />
             </View>
+
             <View style={styles.posterWrap}>
                 <Image
                     source={
@@ -100,6 +115,7 @@ export default function ProjectDetail({ route, navigation }) {
                     }}
                 />
             </View>
+
             <View style={styles.infoBox}>
                 <Text style={styles.projectTitle}>{detail.title}</Text>
                 <Text style={styles.metaText}>
@@ -109,12 +125,16 @@ export default function ProjectDetail({ route, navigation }) {
                 </Text>
                 <Text style={styles.detailDesc}>{detail.shortIntro || detail.intro || ''}</Text>
             </View>
+
             <TouchableOpacity style={styles.buttonWrap} onPress={handleEvaluatePress}>
                 <Text style={styles.buttonText}>작품 평가하기</Text>
             </TouchableOpacity>
         </ScrollView>
     );
 }
+
+// styles는 동일...
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
@@ -127,5 +147,14 @@ const styles = StyleSheet.create({
     metaText: { fontSize: 14, color: '#546', marginBottom: 12 },
     detailDesc: { fontSize: 15, color: '#222', marginBottom: 34, minHeight: 80, lineHeight: 21 },
     buttonWrap: { marginHorizontal: 32, marginTop: 20, alignItems: 'center' },
-    buttonText: { backgroundColor: '#295cae', fontSize: 15, color: 'white', padding: 15, borderRadius: 9, fontWeight: 'bold', width: '100%', textAlign: 'center' },
+    buttonText: {
+        backgroundColor: '#295cae',
+        fontSize: 15,
+        color: 'white',
+        padding: 15,
+        borderRadius: 9,
+        fontWeight: 'bold',
+        width: '100%',
+        textAlign: 'center'
+    },
 });
