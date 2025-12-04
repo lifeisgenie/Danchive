@@ -8,8 +8,8 @@ import ProjectList from './src/screens/ProjectList';
 import ExhibitionList from './src/screens/ExhibitionList';
 import ProjectPage from './src/screens/ProjectPage';
 import ProjectRegister from './src/screens/ProjectRegister';
-import ProfEvaluation from './src/screens/ProfEvaluation';
-import UserEvaluation from './src/screens/UserEvaluation';
+import ProfEvaluation from './src/screens/evaluation/ProfEvaluation';
+import UserEvaluation from './src/screens/evaluation/UserEvaluation';
 
 import LandingScreen from './src/screens/Auth/index';
 import SignInPage from './src/screens/Auth/signin';
