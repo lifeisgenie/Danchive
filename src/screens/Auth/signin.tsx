@@ -87,8 +87,8 @@ export default function SignInPage({ navigation }) {
                     <View style={styles.card}>
                         <Text style={styles.title}>Login</Text>
                         <Text style={styles.subdesc}>
-                            Welcome for login Dankook University{"\n"}
-                            graduate art work page
+                            Welcome to{"\n"}
+                            Graduation Art Work Page
                         </Text>
 
                         {/* 이메일 */}
@@ -129,7 +129,7 @@ export default function SignInPage({ navigation }) {
                             />
                             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                                 <Image
-                                    source={showPassword ? hideIcon : showIcon}
+                                    source={showPassword ? showIcon : hideIcon}
                                     style={{ width: 18, height: 18, tintColor: '#b0ccea' }}
                                 />
                             </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function SignInPage({ navigation }) {
                             activeOpacity={0.82}
                         >
                             <Text style={styles.loginBtnText}>
-                                {isLoading ? 'Signing in...' : 'login'}
+                                {isLoading ? 'Signing in...' : 'Login'}
                             </Text>
                         </TouchableOpacity>
 

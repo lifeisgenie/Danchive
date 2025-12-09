@@ -257,7 +257,7 @@ return (
           </View>
         </>
       }
-      contentContainerStyle={{ paddingBottom: 80 }}
+      contentContainerStyle={{ paddingBottom: 100 }}
     />
   </SafeAreaView>
 );

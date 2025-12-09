@@ -130,5 +130,5 @@ const styles = StyleSheet.create({
     input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 18, paddingVertical: 14, marginBottom: 14, fontSize: 17, width: '100%', backgroundColor: '#fafcff', fontWeight: 'bold' },
     multiInput: { minHeight: 60, textAlignVertical: 'top', paddingTop: 18 },
     longinput: { height: 200, textAlignVertical: 'top', paddingTop: 18 },
-    submitBtn: { width: '100%', marginTop: 10, marginBottom: 18 },
+    submitBtn: { width: '100%', marginTop: 10, marginBottom: 28 },
 });

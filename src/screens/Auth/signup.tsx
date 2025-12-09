@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
     ImageBackground,
+    Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -164,12 +165,14 @@ export default function SignUpPage({ navigation }) {
                         ) : null}
 
                         {/* 비밀번호 */}
-                        <View style={[
-                            styles.input,
-                            styles.inputRow,
-                            !!password && styles.filledInput,
-                            validationErrors.password && styles.inputError
-                        ]}>
+                        <View
+                            style={[
+                                styles.input,
+                                styles.inputRow,
+                                !!password && styles.filledInput,
+                                validationErrors.password && styles.inputError,
+                            ]}
+                        >
                             <TextInput
                                 style={[styles.passInput]}
                                 placeholder="Password"
@@ -179,8 +182,20 @@ export default function SignUpPage({ navigation }) {
                                 secureTextEntry={!showPassword}
                                 editable={!isLoading}
                             />
-                            <TouchableOpacity style={styles.iconButton} onPress={() => setShowPassword(!showPassword)}>
-                                <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#d7eaff" />
+
+                            <TouchableOpacity
+                                style={styles.iconButton}
+                                onPress={() => setShowPassword(!showPassword)}
+                            >
+                                <Image
+                                    source={
+                                        showPassword
+                                            ? require('../assets/eye-show.png') // 비밀번호 보이는 중 → 가려진 아이콘
+                                            : require('../assets/eye-hide.png') // 비밀번호 숨겨진 중 → 보여주는 아이콘
+                                    }
+                                    style={{ width: 20, height: 20, tintColor: '#d7eaff' }}
+                                    resizeMode="contain"
+                                />
                             </TouchableOpacity>
                         </View>
                         {validationErrors.password ? (
@@ -196,7 +211,7 @@ export default function SignUpPage({ navigation }) {
                             disabled={isLoading}
                         >
                             <Text style={styles.signupButtonText}>
-                                {isLoading ? '...' : 'sign in'}
+                                {isLoading ? '...' : 'Sign Up'}
                             </Text>
                         </TouchableOpacity>
                     </View>

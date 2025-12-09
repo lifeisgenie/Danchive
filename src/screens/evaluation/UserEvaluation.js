@@ -5,9 +5,9 @@ import {
     TouchableOpacity,
     StyleSheet,
     Alert,
-    SafeAreaView,
     TextInput,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -16,7 +16,7 @@ const TERM = '2025-2';
 
 export default function UserEvaluationScreen({ route, navigation }) {
     const { projectId, teamName: passedTeamName } = route.params;
-
+    const insets = useSafeAreaInsets();
     const [page, setPage] = useState(1);
     const [q2, setQ2] = useState(null); // 창의성
     const [q3, setQ3] = useState(null); // 완성도
@@ -362,12 +362,30 @@ export default function UserEvaluationScreen({ route, navigation }) {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            {renderPage()}
-            {renderBottomButton()}
-        </SafeAreaView>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            {/* 상단 영역: top inset + padding */}
+            <View
+                style={{
+                    flex: 1,
+                    paddingTop: (insets.top || 0) + 8,   // 위로 조금 띄우기
+                }}
+            >
+                {renderPage()}
+            </View>
+
+            {/* 하단 버튼 영역: bottom inset만큼 패딩 */}
+            <View
+                style={{
+                    paddingBottom: Math.max(insets.bottom, 8), // 홈 인디케이터/하단 바 피하기
+                    backgroundColor: '#0052CC',
+                }}
+            >
+                {renderBottomButton()}
+            </View>
+        </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },

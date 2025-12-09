@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     projectTitle: { fontSize: 23, fontWeight: 'bold', marginBottom: 8 },
     metaText: { fontSize: 14, color: '#546', marginBottom: 12 },
     detailDesc: { fontSize: 15, color: '#222', marginBottom: 34, minHeight: 80, lineHeight: 21 },
-    buttonWrap: { marginHorizontal: 32, marginTop: 20, alignItems: 'center' },
+    buttonWrap: { marginHorizontal: 32, marginTop: 20,marginBottom: 10, alignItems: 'center' },
     buttonText: {
         backgroundColor: '#295cae',
         fontSize: 15,
