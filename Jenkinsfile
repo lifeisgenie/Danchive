@@ -12,7 +12,7 @@ pipeline {
         // 테스트용 DB (Kubernetes mysql 서비스)
         DB_URL      = 'jdbc:mysql://mysql.danchive-db.svc.cluster.local:3306/danchive?serverTimezone=Asia/Seoul&characterEncoding=UTF-8'
         DB_USER     = 'danchive'
-        DB_PASSWORD = '<REMOVED_DB_PASSWORD>'
+        DB_PASSWORD = credentials('danchive-db-password') // Jenkins Credentials에 등록
     }
 
     options {
