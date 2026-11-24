@@ -14,8 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SERVER_URL } from '../../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 
 const validatePassword = (password) => {
     const regex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,16}$/;

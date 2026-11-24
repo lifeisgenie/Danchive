@@ -10,11 +10,12 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SERVER_URL } from '../config/server';
 
 const screenWidth = Dimensions.get('window').width;
 const cardWidth = screenWidth * 0.95;
 const cardHeight = cardWidth * 1.2;
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 const FILE_BASE_URL = API_BASE_URL.replace('/api/v1', '/files');
 
 export default function Mainpage({ navigation }) {

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SERVER_URL } from '../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
-const BASE = "http://<SERVER_HOST>:8080/files/";
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
+const BASE = `${SERVER_URL}/files/`;
 
 export default function ExhibitionList({ navigation }) {
     const [exhibitions, setExhibitions] = useState([]);

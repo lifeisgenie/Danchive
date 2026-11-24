@@ -15,8 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { SERVER_URL } from '../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 
 const menuItems = [
   { title: '비밀번호 재설정' },

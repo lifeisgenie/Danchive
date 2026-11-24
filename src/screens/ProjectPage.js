@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_URL } from '../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 const { width: screenWidth } = Dimensions.get('window');
 const POSTER_HEIGHT = Math.round(screenWidth * 1.2);
 

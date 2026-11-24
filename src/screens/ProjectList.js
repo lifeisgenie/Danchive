@@ -9,8 +9,9 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
+import { SERVER_URL } from '../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 
 // 상 이름별 메달 아이콘 매핑
 const awardIcons = {

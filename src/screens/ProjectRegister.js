@@ -3,8 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image, Scro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { SERVER_URL } from '../config/server';
 
-const API_URL = 'http://<SERVER_HOST>:8080/api/v1/exhibits';
+const API_URL = `${SERVER_URL}/api/v1/exhibits`;
 const CURRENT_TERM = '2025-2'; 
 
 export default function ProjectRegister({ route, navigation }) {

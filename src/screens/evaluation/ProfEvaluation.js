@@ -10,8 +10,9 @@ import {
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_URL } from '../../config/server';
 
-const API_BASE_URL = 'http://<SERVER_HOST>:8080/api/v1';
+const API_BASE_URL = `${SERVER_URL}/api/v1`;
 
 export default function ProfEvaluationScreen({ route, navigation }) {
     const { projectId, teamName } = route.params;
